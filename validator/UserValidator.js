@@ -5,9 +5,9 @@ let email_validator = require("email-validator");
 
 numOfKeys = (post) =>{
     if(Object.keys(post).length != 4){
-        return "Incorrect number of keys";
+        return true;
     }
-    return true;
+    return false;
 }
 
 missingKeys = (post) =>{
@@ -16,9 +16,9 @@ missingKeys = (post) =>{
     let first_name = post.first_name;
     let last_name = post.last_name;
     if(email_address == undefined|| password == undefined|| first_name == undefined|| last_name == undefined){
-        return "Missing keys";
+        return true;
     }
-    return true;
+    return false;
 }
 
 passwordStrength = (password) =>{
@@ -33,28 +33,28 @@ emailValidator =(email_address)=>{
     return email_validator.validate(email_address);
 }
 
-emailExists = async (email_address)=>{
-    let result = await db.findAll("email", email_address).then((result)=>{
+emailExists =  async (email_address) =>{
+    let result  = await db.findAll("email_address", email_address).then((result)=>{
         return result;
     });
     if(result.length != 0){
-        return "Email already exists";
+        return true;
     }
-
-    return true;
+    return false;
 }
 
-main = (post) =>{
-    if(typeof(numOfKeys(post)) == "string"){
-        return numOfKeys(post);
-    }else if(typeof(missingKeys(post)) == "string"){
-        return missingKeys(post);
+main = async (post) =>{
+    console.log("Validating");
+    if(numOfKeys(post)){
+        return "Incorrect number of keys";
+    }else if(missingKeys(post)){
+        return "Missing keys";
     }else if(Array.isArray(passwordStrength(post.password))){
         return passwordStrength(post.password);
     }else if(!emailValidator(post.email_address)){
         return "Invalid email";
-    }else if(typeof(emailExists(post.email_address)) == "string"){
-        return emailExists(post.email);
+    }else if(await emailExists(post.email_address)){
+        return "Email address already in use";
     }else{
         return "Passed";
     }

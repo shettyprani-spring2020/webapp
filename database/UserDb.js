@@ -2,13 +2,7 @@ let models = require("../models");
 let hashing = require("../validator/Bcrypt");
 
 findAll = (key, value) => {
-  if (key == undefined) {
-    return models.User.findAll({
-      raw: true
-    }).then(users => {
-      return users;
-    });
-  } else {
+
     let where = {};
     where[key] = value;
     return models.User.findAll({
@@ -17,7 +11,7 @@ findAll = (key, value) => {
     }).then(user => {
       return user;
     });
-  }
+  
 };
 
 updateUser = (id, put) => {
@@ -53,4 +47,15 @@ addUser = post => {
   );
 };
 
-module.exports = { findAll, addUser, updateUser };
+login = (email)=>{
+  return models.User.findAll({
+    raw: true,
+    where: {
+      email_address:email
+    }
+  }).then(user => {
+    return user;
+  });
+}
+
+module.exports = { findAll, addUser, updateUser, login };
