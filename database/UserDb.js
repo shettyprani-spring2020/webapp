@@ -14,15 +14,14 @@ findAll = (key, value) => {
   
 };
 
-updateUser = (id, put) => {
+updateUser = (email_address, put) => {
   let update = {};
   for (key of Object.keys(put)) {
     update[key] = put[key];
   }
-  console.log(update);
   update["account_updated"] = Date().toLocaleString();
   models.User.update(update, {
-    where: { id }
+    where: { email_address }
   })
     .then(res => {
       console.log(res);

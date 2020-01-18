@@ -5,18 +5,22 @@ let db = require("../database/UserDb");
 let hash = require("../validator/Bcrypt");
 let auth = require('basic-auth');
 
-router.get("/self", async (req, res, next)=>{
+router.all("/self", async (req, res, next)=>{
   let info = auth(req);
+  if(info == undefined){
+    return res.status(401).send("No authorization");
+  }else{
   let user = await db.login(info.name);
   user = user[0];
-  console.log(info.pass+"------"+user.password)
-  if(user.length == 0 || !hash.loginCompare(info.pass, user.password)){
-    console.log("WRONG")
-      res.status(401).send("Wrong username or password!");
-      return;
+  let pass = info.pass;
+  if((user.length == 0 || !hash.loginCompare(pass, user.password))){
+    return res.status(401).send("Wrong username or password!");
   }
+  let existing_token = req.headers['x-access-token'] || req.headers['authorization'];
+  console.log(existing_token)
   next();
-})
+}
+});
 
 
 /* GET users listing. */
@@ -30,7 +34,8 @@ router.put('/self', async function(req, res, next) {
   let put = req.body;
   let keys = Object.keys(put);
   let allowed = ["password", "first_name", "last_name"];
-  let id ="1";
+  let info = auth(req);
+  let name = info.name;
   if(keys.length >0 && keys.length > 3){
     res.status(400).send("Too many parameters");
     return;
@@ -48,7 +53,7 @@ router.put('/self', async function(req, res, next) {
     }
     put.password = hash.encrypt(put.password);
   }
-  db.updateUser(id, put)
+  db.updateUser(name, put)
 
   res.status(204).send('Updated!');
 });
