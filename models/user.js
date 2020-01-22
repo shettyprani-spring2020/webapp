@@ -6,10 +6,10 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
     },
-    email_address: DataTypes.STRING,
-    password: DataTypes.STRING,
     first_name: DataTypes.STRING,
     last_name: DataTypes.STRING,
+    email_address: DataTypes.STRING,
+    password: DataTypes.STRING,
     account_created : {
       type: DataTypes.DATE, 
       defaultValue: DataTypes.NOW

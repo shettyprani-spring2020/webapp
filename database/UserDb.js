@@ -32,18 +32,22 @@ updateUser = (email_address, put) => {
     });
 };
 
-addUser = post => {
+addUser = (post,res) => {
   post.password = hashing.encrypt(post.password);
   models.User.create(
     (values = {
-      email_address: post.email_address,
       password: post.password,
       first_name: post.first_name,
       last_name: post.last_name,
+      email_address: post.email_address,
       account_created: Date().toLocaleString(),
       account_updated: Date().toLocaleString()
     })
-  );
+  ).then(data =>{
+    let user = data.toJSON();
+    delete user["password"];
+    return res.status(201).send(user);
+  });
 };
 
 login = (email)=>{
