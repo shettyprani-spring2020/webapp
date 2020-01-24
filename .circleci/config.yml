@@ -11,6 +11,6 @@ jobs:
 
 workflows:
   version: 2
-  pr_check_test:
+  pr_check:
     jobs:
        - pr_check
