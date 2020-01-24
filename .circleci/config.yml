@@ -1,7 +1,15 @@
 version: 2.1 # use CircleCI 2.1
 jobs: # a collection of steps
+  pr_check:
+    docker: 
+
+    steps:
+      - checkout
+      - run:
+          name: test
+          command: echo "HELLO"
+
   build: # runs not using Workflows must have a `build` job as entry point
-    working_directory: ~/mern-starter # directory where steps will run
     docker: # run the steps with Docker
       - image: circleci/node:10.16.3 # ...with this image as the primary container; this is where all `steps` will run
       - image: circleci/mysql:8.0.3 # and this image as the secondary service container
@@ -14,14 +22,14 @@ jobs: # a collection of steps
           # Read about caching dependencies: https://circleci.com/docs/2.0/caching/
           key: dependency-cache-{{ checksum "package-lock.json" }}
       - run:
-          name: install-npm-wee
+          name: install-npm
           command: npm install
       - save_cache: # special step to save the dependency cache
           key: dependency-cache-{{ checksum "package-lock.json" }}
           paths:
             - ./node_modules
-      - run: # run tests
-          name: test
+      # - run: # run tests
+          # name: test
       #     command: npm test
       # - run: # run coverage report
       #     name: code-coverage
@@ -36,3 +44,9 @@ jobs: # a collection of steps
       # - store_test_results: # for display in Test Summary: https://circleci.com/docs/2.0/collect-test-data/
       #     path: test-results.xml
       # See https://circleci.com/docs/2.0/deployment-integrations/ for deploy examples
+
+workflows:
+  version: 2
+  pr_check:
+    jobs:
+       - pr_check
