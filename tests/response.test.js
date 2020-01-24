@@ -4,7 +4,7 @@ const app = require('../app')
 describe('Post Endpoints', () => {
   it('should create a new post', async () => {
     const res = await request(app)
-      .post('/v1/users')
+      .post('/v1/user')
       .send({
         email_address:"test",
         password:"Pranit123#",
@@ -18,7 +18,7 @@ describe('Post Endpoints', () => {
 describe('Get Endpoints', () => {
     it('should get', async () => {
       const res = await request(app)
-        .get('/v1/users/self')
+        .get('/v1/user/self')
       expect(res.statusCode).toEqual(401)
     })
   })

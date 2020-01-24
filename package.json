@@ -5,7 +5,7 @@
   "scripts": {
     "start": "nodemon ./bin/www",
     "test":"jest --forceExit",
-    "ci:test":"NODE_ENV=test jest --cli --runInBand --forceExit "
+    "ci:test":"NODE_ENV=test jest --ci --runInBand --forceExit "
   },
   "dependencies": {
     "basic-auth": "^2.0.1",
