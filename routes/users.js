@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 let UserValidator = require("../validator/UserValidator");
-let db = require("../database/UserDb");
+let dbUser = require("../database/UserDb");
 let hash = require("../validator/Bcrypt");
 let auth = require('basic-auth');
 
@@ -10,8 +10,11 @@ router.all("/self", async (req, res, next)=>{
   if(info == undefined){
     return res.status(401).send("No authorization");
   }else{
-  let user = await db.login(info.name);
+  let user = await dbUser.login(info.name);
   user = user[0];
+  if(user == undefined){
+    return res.status(401).send("No authorization");
+  }
   let pass = info.pass;
   if((user.length == 0 || !hash.loginCompare(pass, user.password))){
     return res.status(401).send("Wrong username or password!");
@@ -26,7 +29,8 @@ router.all("/self", async (req, res, next)=>{
 /* GET users listing. */
 router.get('/self', async function(req, res, next) {
   let info = auth(req);
-  let result = await db.findAll("email_address", info.name);
+  let result = await dbUser.findAll("email_address", info.name);
+  console.log(result)
   result = result[0];
   delete result["password"];
   res.status(200).send(result);
@@ -61,7 +65,7 @@ router.put('/self', async function(req, res, next) {
     }
     put.password = hash.encrypt(put.password);
   }
-  db.updateUser(name, put);
+  dbUser.updateUser(name, put);
   res.status(204).send();
 });
 
@@ -72,7 +76,7 @@ router.post('/', async function(req, res, next) {
       res.status(400).send("Bad Request \n"+result);
     return;
   }
-  await db.addUser(post, res);
+  await dbUser.addUser(post, res);
 
 });
 module.exports = router;
