@@ -1,4 +1,6 @@
 'use strict';
+let Bills =  require('./index').Bill;
+
 module.exports = (sequelize, DataTypes) => {
   var User = sequelize.define('User', {
     id: {
@@ -19,6 +21,17 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: DataTypes.NOW
     }
   });
+
+  User.associate = (models) =>{
+    const {User, Bill} = models;
+    User.hasMany(Bill, {
+      foreignKey: "owner_id"
+    });
+    Bill.belongsTo(User, {
+      as: 'user',
+      foreignKey: "owner_id"
+    });
+  };
 
   return User;
 };
