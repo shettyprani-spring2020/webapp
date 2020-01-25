@@ -10,7 +10,10 @@ addBill = (Bill, user, res) => {
         categories: Bill.categories,
         paymentStatus: Bill.paymentStatus
     },{
-        include: [models.User]
+        include: [{
+            model:models.User,
+            as: 'user'
+        }]
     }).then(data =>{
         return res.status(201).send(data);
     }).catch(err=>{
@@ -24,11 +27,7 @@ findAll = (user, res) =>{
             owner_id: user.id
         },
         subQuery: false,
-        raw:true,
-        include:[{
-            model: models.User,
-            as:'user'
-        }]
+        raw:false
     }).then(bills=>{
         return res.status(200).send(bills);
     })
@@ -37,8 +36,26 @@ findAll = (user, res) =>{
 findById = (id, user, res) =>{
     models.Bill.findAll({
         where:{
-            id: id,
-            owner_id: user.id
+            id: id
+        },
+        subQuery: false,
+        limit:1
+    }).then(bills=>{
+        if(bills.length == 0){
+            return res.status(404).send("Not found");
+        }
+        if(bills[0].owner_id != user.id ){
+            console.log()
+            return res.status(401).send("Unauthorized")
+        }
+        return res.status(200).send(bills[0]);
+    })
+}
+
+DeleteById = (id, user, res) =>{
+    models.Bill.findAll({
+        where:{
+            id: id
         },
         subQuery: false,
         raw:true,
@@ -49,10 +66,62 @@ findById = (id, user, res) =>{
         }]
     }).then(bills=>{
         if(bills.length == 0){
-            return res.status(404).send("Not found");
+            return res.status(404).send("Not Found")
         }
-        return res.status(200).send(bills[0]);
+        if(bills[0].owner_id != user.id ){
+            return res.status(401).send("Unauthorized")
+        }
+        models.Bill.destroy({
+            where:{
+                id: id
+            },
+            subQuery: false,
+            raw:true,
+            limit:1,
+            include:[{
+                model: models.User,
+                as:'user'
+            }]
+        }).then(()=>{
+            return res.status(204).send();
+        })
     })
 }
 
-module.exports = { addBill, findAll, findById}
+UpdateById = (id, put, user, res)=>{
+    models.Bill.findAll({
+        where:{
+            id: id
+        },
+        subQuery: false,
+        limit:1,
+        include:[{
+            model: models.User,
+            as:'user'
+        }]
+    }).then(bills=>{
+        if(bills.length == 0){
+            return res.status(404).send("Not Found")
+        }
+        if(bills[0].owner_id != user.id ){
+            return res.status(401).send("Unauthorized")
+        }
+
+        models.Bill.update(put, {
+            where:{
+                id: id
+            },
+            subQuery: false,
+            raw:true,
+            limit:1,
+            include:[{
+                model: models.User,
+                as:'user'
+            }]
+        }).then((ody)=>{
+            findById(id,user,res);
+        })
+    })
+}
+
+module.exports = { addBill, findAll, findById, DeleteById, UpdateById}

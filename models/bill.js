@@ -23,10 +23,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
         get(){
-            return this.getDataValue('categories').split(';');
+            return this.getDataValue('categories').split(',');
         },
         set(val){
-            return this.setDataValue('categories', val.join(';'));
+            return this.setDataValue('categories', val.join(','));
         }
     },
     paymentStatus:{
