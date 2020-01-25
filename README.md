@@ -1,29 +1,38 @@
 # WebApp
----
-Node project
-
+Web applicatin using for NodeJs for CSYE6225
 
 ## Installation Details
----
 ### Locally
-*Install Node*
-> sudo apt-get install curl
-> curl -sL https://deb.nodesource.com/setup_13.x | sudo -E bash -
-> sudo apt-get install nodejs
+**Install Node**
+```javascript
+sudo apt-get install curl 
+curl -sL https://deb.nodesource.com/setup_13.x | sudo -E bash -
+sudo apt-get install nodejs
+```
 
-Check NodeJs and npm version
-> node -v
+**Check NodeJs and npm version**
+```javascript
+node -v
+```
 
 npm
-> npm -v
+```javascript
+npm -v
+```
 
-*Install all package dependencies*
-> npm ci
+**Install all package dependencies**
+```javascript
+npm i
+```
 
-*Start application*
-> npm start
+**Start application**
+```javascript
+npm start
+```
 
-*Run unit tests*
-> npm test
+**Run unit tests**
+```javascript
+npm test
+```
 
  
