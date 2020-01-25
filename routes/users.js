@@ -42,16 +42,12 @@ router.put('/self', async function(req, res, next) {
   let allowed = ["password", "first_name", "last_name", "email_address"];
   let info = auth(req);
   let name = info.name;
-  if(keys.length != 4){
+  if(UserValidator.numOfKeys(put,4)){
     res.status(400).send("Bad Request");
     return;
   }
-  
-  for(key of keys){
-    if(!allowed.includes(key)){
-      res.status(400).send("Wrong parameters");
-      return;
-    }
+  if(UserValidator.missingKeys(put, allowed)){
+    return res.status(400).send("Bad Request!")
   }
   if(info.name != put["email_address"]){
     return res.status(400).send("Bad Request!")
