@@ -5,8 +5,10 @@ let hash = require("../validator/Bcrypt");
 let dbUser = require("../database/UserDb");
 let dbBill = require("../database/BillDb");
 
+// authenticated user variable
 let user;
 
+// Authenticate all end points
 router.all("*", async (req, res, next) => {
   let info = auth(req);
   if (info == undefined) {
@@ -22,6 +24,7 @@ router.all("*", async (req, res, next) => {
   }
 });
 
+// Create new bills only will all fields are provided
 router.post("/", (req, res, next)=>{
     const Bill = req.body;
     const check = ["vendor", "bill_date", "due_date", "amount_due","categories","paymentStatus"];
@@ -48,8 +51,8 @@ router.post("/", (req, res, next)=>{
     dbBill.addBill(Bill, user, res);
 })
 
-
-
+// Get ALL details or
+// Get only detail of id provided
 router.get(/\/(:id)?/, (req, res, next)=>{
   const url = req.originalUrl
   if(url.includes("bills")){
@@ -63,6 +66,8 @@ router.get(/\/(:id)?/, (req, res, next)=>{
   }
 })
 
+
+// Delete bill based on ID
 router.delete("/", (req, res, next)=>{
   if(req.originalUrl.includes("bills")){
     return res.status(400).send("Bad Request")
@@ -75,6 +80,7 @@ router.delete("/", (req, res, next)=>{
   dbBill.DeleteById(id, user, res);
 })
 
+// Update bill based on ID
 router.put("/" ,(req, res, next)=>{
   const put = req.body;
   const check = ["vendor", "bill_date", "due_date", "amount_due","categories","paymentStatus"];

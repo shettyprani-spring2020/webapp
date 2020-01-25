@@ -3,6 +3,7 @@ let owasp = require('owasp-password-strength-test');
 let db = require("../database/UserDb");
 let email_validator = require("email-validator");
 
+// Number of keys for new user should be 4
 numOfKeys = (post) =>{
     if(Object.keys(post).length != 4){
         return true;
@@ -10,6 +11,7 @@ numOfKeys = (post) =>{
     return false;
 }
 
+// Should have all the required fields
 missingKeys = (post) =>{
     let email_address = post.email_address;
     let password = post.password;
@@ -21,6 +23,7 @@ missingKeys = (post) =>{
     return false;
 }
 
+// should match minimum password criteria
 passwordStrength = (password) =>{
     let result = owasp.test(password);
     if(!result.strong){
@@ -29,10 +32,12 @@ passwordStrength = (password) =>{
     return true;
 }
 
+// should be a valid email
 emailValidator =(email_address)=>{
     return email_validator.validate(email_address);
 }
 
+// check if email already exists
 emailExists =  async (email_address) =>{
     let result  = await db.findAll("email_address", email_address).then((result)=>{
         return result;
@@ -43,6 +48,7 @@ emailExists =  async (email_address) =>{
     return false;
 }
 
+// run all validations for post request
 main = async (post) =>{
     console.log("Validating");
     if(numOfKeys(post)){

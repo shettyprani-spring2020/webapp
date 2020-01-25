@@ -1,6 +1,8 @@
 let models = require("../models");
 let hashing = require("../validator/Bcrypt");
 
+// find user details
+// return JSON user details
 findAll = (key, value) => {
 
     let where = {};
@@ -14,6 +16,8 @@ findAll = (key, value) => {
   
 };
 
+// update user based on email_address
+// return 204 no content
 updateUser = (email_address, put) => {
   let update = {};
   for (key of Object.keys(put)) {
@@ -32,6 +36,8 @@ updateUser = (email_address, put) => {
     });
 };
 
+// add new user
+// return new user details
 addUser = (post,res) => {
   post.password = hashing.encrypt(post.password);
   models.User.create(
@@ -50,6 +56,7 @@ addUser = (post,res) => {
   });
 };
 
+// check if user exists
 login = (email)=>{
   return models.User.findAll({
     raw: true,
