@@ -1,5 +1,8 @@
 let models = require("../models");
 
+
+// Add bill
+// return Bill created
 addBill = (Bill, user, res) => {
     models.Bill.create({
         vendor: Bill.vendor,
@@ -21,6 +24,8 @@ addBill = (Bill, user, res) => {
     })
 }
 
+// Find all bills for user
+// return array of all bills
 findAll = (user, res) =>{
     models.Bill.findAll({
         where:{
@@ -33,6 +38,10 @@ findAll = (user, res) =>{
     })
 }
 
+// Full bill based on id
+// 404 - Bill doesn't exist
+// 401 - Bill doesn't belong to user
+// return - return JSON of bill queried
 findById = (id, user, res) =>{
     models.Bill.findAll({
         where:{
@@ -52,6 +61,10 @@ findById = (id, user, res) =>{
     })
 }
 
+// Delete id based on id
+// 404 - Bill doesn't exist
+// 401 - Bill doesn't belong to user
+// return - No content
 DeleteById = (id, user, res) =>{
     models.Bill.findAll({
         where:{
@@ -88,6 +101,10 @@ DeleteById = (id, user, res) =>{
     })
 }
 
+// Update id based on ID
+// 404 - Bill doesn't exist
+// 401 - Bill doesn't belong to user
+// return - JSON of updated Bill
 UpdateById = (id, put, user, res)=>{
     models.Bill.findAll({
         where:{

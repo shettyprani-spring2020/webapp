@@ -5,6 +5,7 @@ let dbUser = require("../database/UserDb");
 let hash = require("../validator/Bcrypt");
 let auth = require('basic-auth');
 
+// Check all self endpoints for authentication
 router.all("/self", async (req, res, next)=>{
   let info = auth(req);
   if(info == undefined){
@@ -36,6 +37,8 @@ router.get('/self', async function(req, res, next) {
   res.status(200).send(result);
 });
 
+// Put end point to create new user
+// Can only PUT if authenticated and all fields provided
 router.put('/self', async function(req, res, next) {
   let put = req.body;
   let keys = Object.keys(put);
@@ -65,6 +68,7 @@ router.put('/self', async function(req, res, next) {
   res.status(204).send();
 });
 
+// post end point to create new user
 router.post('/', async function(req, res, next) {
   let post = req.body;
   let result = await UserValidator.main(post);

@@ -22,6 +22,7 @@ missingKeys = (post, check) =>{
     return false;
 }
 
+// should match minimum password criteria
 passwordStrength = (password) =>{
     let result = owasp.test(password);
     if(!result.strong){
@@ -30,10 +31,12 @@ passwordStrength = (password) =>{
     return true;
 }
 
+// should be a valid email
 emailValidator =(email_address)=>{
     return email_validator.validate(email_address);
 }
 
+// check if email already exists
 emailExists =  async (email_address) =>{
     let result  = await db.findAll("email_address", email_address).then((result)=>{
         return result;
@@ -44,6 +47,7 @@ emailExists =  async (email_address) =>{
     return false;
 }
 
+// run all validations for post request
 main = async (post) =>{
     console.log("Validating");
     if(numOfKeys(post, 4)){
