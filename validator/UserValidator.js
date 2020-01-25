@@ -4,21 +4,20 @@ let db = require("../database/UserDb");
 let email_validator = require("email-validator");
 
 // Number of keys for new user should be 4
-numOfKeys = (post) =>{
-    if(Object.keys(post).length != 4){
+numOfKeys = (post, num) =>{
+    if(Object.keys(post).length != num){
         return true;
     }
     return false;
 }
 
 // Should have all the required fields
-missingKeys = (post) =>{
-    let email_address = post.email_address;
-    let password = post.password;
-    let first_name = post.first_name;
-    let last_name = post.last_name;
-    if(email_address == undefined|| password == undefined|| first_name == undefined|| last_name == undefined){
-        return true;
+missingKeys = (post, check) =>{
+    let keys = Object.keys(post);
+    for(key of keys){
+        if(!check.includes(key)){
+            return true;
+        }
     }
     return false;
 }
@@ -51,9 +50,9 @@ emailExists =  async (email_address) =>{
 // run all validations for post request
 main = async (post) =>{
     console.log("Validating");
-    if(numOfKeys(post)){
+    if(numOfKeys(post, 4)){
         return "Incorrect number of keys";
-    }else if(missingKeys(post)){
+    }else if(missingKeys(post, ["email_address", "password","first_name","last_name"])){
         return "Missing keys";
     }else if(Array.isArray(passwordStrength(post.password))){
         return passwordStrength(post.password);
