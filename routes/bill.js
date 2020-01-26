@@ -17,6 +17,9 @@ router.all("*", async (req, res, next) => {
     user = await dbUser.login(info.name);
     user = user[0];
     let pass = info.pass;
+    if (user == undefined) {
+      return res.status(401).send("Unauthorization");
+    }
     if (user.length == 0 || !hash.loginCompare(pass, user.password)) {
       return res.status(401).send("Wrong username or password!");
     }
@@ -25,93 +28,115 @@ router.all("*", async (req, res, next) => {
 });
 
 // Create new bills only will all fields are provided
-router.post("/", (req, res, next)=>{
-    const Bill = req.body;
-    const check = ["vendor", "bill_date", "due_date", "amount_due","categories","paymentStatus"];
-    const keys = Object.keys(Bill);
-    if(req.originalUrl.includes("bills")){
-      return res.status(400).send("Bad Request");
+router.post("/", (req, res, next) => {
+  const Bill = req.body;
+  const check = [
+    "vendor",
+    "bill_date",
+    "due_date",
+    "amount_due",
+    "categories",
+    "paymentStatus"
+  ];
+  const keys = Object.keys(Bill);
+  if (req.originalUrl.includes("bills")) {
+    return res.status(400).send("Bad Request");
+  }
+  if (keys.length != 6) {
+    return res.status(400).send("Bad Request");
+  }
+  for (key of keys) {
+    if (!check.includes(key)) {
+      return res.status(400).send("Bad Request!");
     }
-    if(keys.length != 6){
-      return res.status(400).send("Bad Request");
-    }
-    for(key of keys){
-      if(!check.includes(key)){
-        return res.status(400).send("Bad Request!");
-      }
-    }
-    if(!["paid","due","past_due","no_payment_required"].includes(Bill.paymentStatus)){
-      return res.status(400).send("Bad Request");
-    }
-    if(Bill.amount_due <= 0.0){
-      return res.status(400).send("Bad Request");
-    }
-    Bill.categories = Bill.categories.split(',');
-    console.log("HERE"+user.id)
-    dbBill.addBill(Bill, user, res);
-})
+  }
+  if (
+    !["paid", "due", "past_due", "no_payment_required"].includes(
+      Bill.paymentStatus
+    )
+  ) {
+    return res.status(400).send("Bad Request");
+  }
+  if (Bill.amount_due <= 0.0) {
+    return res.status(400).send("Bad Request");
+  }
+  Bill.categories = Bill.categories.split(",");
+  dbBill.addBill(Bill, user, res).then(data => {
+    return res.status(201).send(data);
+  });
+});
 
 // Get ALL details or
 // Get only detail of id provided
-router.get(/\/(:id)?/, (req, res, next)=>{
-  const url = req.originalUrl
-  if(url.includes("bills")){
-    dbBill.findAll(user, res);
-  }else{
+router.get(/\/(:id)?/, (req, res, next) => {
+  const url = req.originalUrl;
+  if (url.includes("bills")) {
+    dbBill.findAll(user, res).then(bills => {
+      return res.status(200).send(bills);
+    });
+  } else {
     const id = req.query.id;
-    if(id == undefined){
-      return res.status(400).send("Bad Request")
+    if (id == undefined) {
+      return res.status(400).send("Bad Request");
     }
-    dbBill.findById(id,user, res)
+    dbBill.findById(id, user, res);
   }
-})
-
+});
 
 // Delete bill based on ID
-router.delete("/", (req, res, next)=>{
-  if(req.originalUrl.includes("bills")){
-    return res.status(400).send("Bad Request")
+router.delete("/", (req, res, next) => {
+  if (req.originalUrl.includes("bills")) {
+    return res.status(400).send("Bad Request");
   }
 
   const id = req.query.id;
-  if(id == undefined){
-    return res.status(400).send("Bad Request")
+  if (id == undefined) {
+    return res.status(400).send("Bad Request");
   }
   dbBill.DeleteById(id, user, res);
-})
+});
 
 // Update bill based on ID
-router.put("/" ,(req, res, next)=>{
+router.put("/", (req, res, next) => {
   const put = req.body;
-  const check = ["vendor", "bill_date", "due_date", "amount_due","categories","paymentStatus"];
+  const check = [
+    "vendor",
+    "bill_date",
+    "due_date",
+    "amount_due",
+    "categories",
+    "paymentStatus"
+  ];
   const keys = Object.keys(put);
-  if(req.originalUrl.includes("bills")){
+  if (req.originalUrl.includes("bills")) {
     return res.status(400).send("Bad Request");
   }
-  if(put == undefined){
+  if (put == undefined) {
     return res.status(400).send("Bad Request");
   }
 
-  if(keys.length !=6){
+  if (keys.length != 6) {
     return res.status(400).send("Bad Request");
   }
-  for(key of keys){
-    if(!check.includes(key)){
+  for (key of keys) {
+    if (!check.includes(key)) {
       return res.status(400).send("Bad Request");
     }
   }
-  if(!["paid","due","past_due","no_payment_required"].includes(put.paymentStatus)){
+  if (
+    !["paid", "due", "past_due", "no_payment_required"].includes(
+      put.paymentStatus
+    )
+  ) {
     return res.status(400).send("Bad Request");
   }
 
   const id = req.query.id;
-  if(id == undefined){
-    return res.status(400).send("Bad Request")
+  if (id == undefined) {
+    return res.status(400).send("Bad Request");
   }
   put.categories = put.categories.split(",");
   dbBill.UpdateById(id, put, user, res);
-
 });
-
 
 module.exports = router;
