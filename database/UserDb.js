@@ -4,16 +4,14 @@ let hashing = require("../validator/Bcrypt");
 // find user details
 // return JSON user details
 findAll = (key, value) => {
-
-    let where = {};
-    where[key] = value;
-    return models.User.findAll({
-      raw: true,
-      where: where
-    }).then(user => {
-      return user;
-    });
-  
+  let where = {};
+  where[key] = value;
+  return models.User.findAll({
+    raw: true,
+    where: where
+  }).then(user => {
+    return user;
+  });
 };
 
 // update user based on email_address
@@ -38,7 +36,7 @@ updateUser = (email_address, put) => {
 
 // add new user
 // return new user details
-addUser = (post) => {
+addUser = post => {
   post.password = hashing.encrypt(post.password);
   return models.User.create(
     (values = {
@@ -49,37 +47,41 @@ addUser = (post) => {
       account_created: Date().toLocaleString(),
       account_updated: Date().toLocaleString()
     })
-  ).then(data =>{
-    let user = data.toJSON();
-    delete user["password"];
-    return user;
-  }).catch(err=>{
-    return err;
-  });
+  )
+    .then(data => {
+      let user = data.toJSON();
+      delete user["password"];
+      return user;
+    })
+    .catch(err => {
+      return err;
+    });
 };
 
-deleteByEmail = (email)=>{
+deleteByEmail = email => {
   return models.User.destroy({
-    where:{
-      emaiL_address:email
+    where: {
+      emaiL_address: email
     }
-  }).then(user=>{
-    return true;
-  }).catch(()=>{
-    return false;
   })
-}
+    .then(user => {
+      return true;
+    })
+    .catch(() => {
+      return false;
+    });
+};
 
 // check if user exists
-login = (email)=>{
+login = email => {
   return models.User.findAll({
     raw: true,
     where: {
-      email_address:email
+      email_address: email
     }
   }).then(user => {
     return user;
   });
-}
+};
 
 module.exports = { findAll, addUser, updateUser, login, deleteByEmail };
