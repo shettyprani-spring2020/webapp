@@ -7,7 +7,7 @@ jobs:
       - image: circleci/mysql:8.0.3
         environment:
           MYSQL_ROOT_PASSWORD: rootpw
-          MYSQL_DATABASE: test_db
+          MYSQL_DATABASE: test_cloud
           MYSQL_USER: user
           MYSQL_PASSWORD: passw0rd
     steps:
@@ -17,7 +17,7 @@ jobs:
           command: npm install
       - run:
           name: Run test
-          command: npm ci:test
+          command: npm run ci:test
 
   build:
     docker:
@@ -27,9 +27,9 @@ jobs:
       - run:
           name: Install npm
           command: npm install
-      - run:
-          name: npm-start
-          command: npm start
+      # - run:
+      #     name: npm-start
+      #     command: npm start
 
 workflows:
   version: 2
@@ -38,4 +38,8 @@ workflows:
        - pr_check
   build_and_deploy:
     jobs:
-      - build
+      - build:
+          filters:
+            branches:
+              only:
+                - master

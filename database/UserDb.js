@@ -24,7 +24,7 @@ updateUser = (email_address, put) => {
     update[key] = put[key];
   }
   update["account_updated"] = Date().toLocaleString();
-  models.User.update(update, {
+  return models.User.update(update, {
     where: { email_address }
   })
     .then(res => {
@@ -38,9 +38,9 @@ updateUser = (email_address, put) => {
 
 // add new user
 // return new user details
-addUser = (post,res) => {
+addUser = (post) => {
   post.password = hashing.encrypt(post.password);
-  models.User.create(
+  return models.User.create(
     (values = {
       password: post.password,
       first_name: post.first_name,
@@ -52,9 +52,23 @@ addUser = (post,res) => {
   ).then(data =>{
     let user = data.toJSON();
     delete user["password"];
-    return res.status(201).send(user);
+    return user;
+  }).catch(err=>{
+    return err;
   });
 };
+
+deleteByEmail = (email)=>{
+  return models.User.destroy({
+    where:{
+      emaiL_address:email
+    }
+  }).then(user=>{
+    return true;
+  }).catch(()=>{
+    return false;
+  })
+}
 
 // check if user exists
 login = (email)=>{
@@ -68,4 +82,4 @@ login = (email)=>{
   });
 }
 
-module.exports = { findAll, addUser, updateUser, login };
+module.exports = { findAll, addUser, updateUser, login, deleteByEmail };

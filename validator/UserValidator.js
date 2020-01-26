@@ -49,7 +49,6 @@ emailExists =  async (email_address) =>{
 
 // run all validations for post request
 main = async (post) =>{
-    console.log("Validating");
     if(numOfKeys(post, 4)){
         return "Incorrect number of keys";
     }else if(missingKeys(post, ["email_address", "password","first_name","last_name"])){

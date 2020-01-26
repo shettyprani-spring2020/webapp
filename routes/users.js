@@ -76,7 +76,9 @@ router.post('/', async function(req, res, next) {
       res.status(400).send("Bad Request \n"+result);
     return;
   }
-  await dbUser.addUser(post, res);
+  dbUser.addUser(post, res).then(user=>{
+    return res.status(201).send(user);
+  });
 
 });
 module.exports = router;

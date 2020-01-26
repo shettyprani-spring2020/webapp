@@ -1,11 +1,12 @@
 {
     "test": {
-        "username": "pranit",
-        "password": "tal",
-        "database": "cloud",
+        "username": "user",
+        "password": "passw0rd",
+        "database": "test_cloud",
         "host": "127.0.0.1",
         "dialect": "mysql",
         "operatorsAliases": 0,
+        "logging": false,
         "define":{
           "timestamps":false
         }
