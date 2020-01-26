@@ -1,5 +1,6 @@
 const request = require("supertest");
 const app = require("../../app");
+const models = require("../../models")
 const dbUser = require("../../database/UserDb");
 let user = {
   first_name: "pranit",
@@ -9,9 +10,9 @@ let user = {
 };
 
 describe("Test Endpoints", () => {
-  // beforeAll(async ()=>{
-  //   user = await dbUser.addUser(user);
-  // })
+  beforeAll(async ()=>{
+    await models.sequelize.sync({force:true});
+  })
 
   afterAll(async () => {
     await dbUser
@@ -27,7 +28,6 @@ describe("Test Endpoints", () => {
       .send(user)
       .then(res => {
         expect(res.statusCode).toEqual(201);
-        console.log(res.body);
       });
   });
 
