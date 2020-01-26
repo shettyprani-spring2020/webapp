@@ -1,6 +1,6 @@
 const app = require("../../app");
 const dbUser = require("../../database/UserDb");
-
+const models = require("../../models");
 let user = {
     first_name: "pranit",
     last_name: "shetty",
@@ -10,6 +10,10 @@ let user = {
 let new_user;
 
 describe("Testing user database queries",()=>{
+
+    beforeAll(async ()=>{
+        await models.sequelize.sync({force:true});
+      })
 
     it("Create a new User", async ()=>{
         new_user = await dbUser.addUser(user);
