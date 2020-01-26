@@ -17,7 +17,7 @@ jobs:
           command: npm install
       - run:
           name: Run test
-          command: npm ci:test
+          command: npm run ci:test
 
   build:
     docker:
