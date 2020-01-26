@@ -1,7 +1,7 @@
 {
     "test": {
-        "username": "pranit",
-        "password": "tal",
+        "username": "user",
+        "password": "prassw0rd",
         "database": "cloud",
         "host": "127.0.0.1",
         "dialect": "mysql",
