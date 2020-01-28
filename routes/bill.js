@@ -50,6 +50,9 @@ router.post("/", (req, res, next) => {
       return res.status(400).send("Bad Request!");
     }
   }
+  if (!Date.parse(Bill.due_date) || !Date.parse(Bill.bill_date)) {
+    return res.status(400).send("Bad Request");
+  }
   if (
     !["paid", "due", "past_due", "no_payment_required"].includes(
       Bill.paymentStatus
@@ -114,7 +117,9 @@ router.put("/", (req, res, next) => {
   if (put == undefined) {
     return res.status(400).send("Bad Request");
   }
-
+  if (!Date.parse(put.due_date) || !Date.parse(put.bill_date)) {
+    return res.status(400).send("Bad Request");
+  }
   if (keys.length != 6) {
     return res.status(400).send("Bad Request");
   }
