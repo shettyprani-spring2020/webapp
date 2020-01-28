@@ -128,6 +128,9 @@ router.put("/", (req, res, next) => {
       return res.status(400).send("Bad Request");
     }
   }
+  if (put.amount_due <= 0.0) {
+    return res.status(400).send("Bad Request");
+  }
   if (
     !["paid", "due", "past_due", "no_payment_required"].includes(
       put.paymentStatus
