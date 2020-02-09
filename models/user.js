@@ -23,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   User.associate = models => {
-    const { User, Bill } = models;
+    const { User, Bill, File } = models;
     User.hasMany(Bill, {
       foreignKey: "owner_id"
     });

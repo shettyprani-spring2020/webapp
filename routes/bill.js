@@ -4,10 +4,12 @@ let auth = require("basic-auth");
 let hash = require("../validator/Bcrypt");
 let dbUser = require("../database/UserDb");
 let dbBill = require("../database/BillDb");
-
+let dbFile = require("../database/FileDb");
+let formidable = require("formidable");
 // authenticated user variable
 let user;
 
+let dirname = "/home/pranit/Desktop";
 // Authenticate all end points
 router.all("*", async (req, res, next) => {
   let info = auth(req);
@@ -30,6 +32,10 @@ router.all("*", async (req, res, next) => {
 // Create new bills only will all fields are provided
 router.post("/", (req, res, next) => {
   const Bill = req.body;
+  if (req.query.id != undefined) {
+    next();
+    return;
+  }
   const check = [
     "vendor",
     "bill_date",
@@ -73,6 +79,10 @@ router.post("/", (req, res, next) => {
 // Get only detail of id provided
 router.get(/\/(:id)?/, (req, res, next) => {
   const url = req.originalUrl;
+  if (url.includes("file")) {
+    next();
+    return;
+  }
   if (url.includes("bills")) {
     dbBill.findAll(user, res).then(bills => {
       return res.status(200).send(bills);
@@ -82,12 +92,17 @@ router.get(/\/(:id)?/, (req, res, next) => {
     if (id == undefined) {
       return res.status(400).send("Bad Request");
     }
-    dbBill.findById(id, user, res);
+    dbBill.findById(id, user, res).then(resp => {
+      res.status(200).send(resp);
+    });
   }
 });
 
 // Delete bill based on ID
 router.delete("/", (req, res, next) => {
+  if (req.originalUrl.includes("file")) {
+    return next();
+  }
   if (req.originalUrl.includes("bills")) {
     return res.status(400).send("Bad Request");
   }
@@ -144,7 +159,93 @@ router.put("/", (req, res, next) => {
     return res.status(400).send("Bad Request");
   }
   put.categories = put.categories.split(",");
-  dbBill.UpdateById(id, put, user, res);
+  dbBill.UpdateById(id, put, user, res).then(bill => {
+    res.status(200).send(bill);
+  });
+});
+
+router.post("/", async (req, res, next) => {
+  // ---------------------
+  let id = req.query.id.split("/")[0];
+  if (!req.originalUrl.includes("file")) {
+    return res.status(400).send("Bad Request");
+  }
+  let bill = await dbBill.findById(id, user, res);
+  if (bill.attachment != null) {
+    return res.status(400).send("Bad Request\nFile already exists");
+  }
+  // ---------------------
+
+  //
+  // // if (
+  // //   !["application/pdf", "image/png", "image/jpg", "image/jpeg"].includes(
+  // //     file_info.type
+  // //   )
+  // // ) {
+  // //   return res.status(400).send("Bad Request\nWrong file format");
+  // // }
+  let form = new formidable.IncomingForm();
+  form.parse(req);
+
+  console.log("HEREEEE");
+  form.on("fileBegin", (name, file) => {
+    if (
+      !["application/pdf", "image/png", "image/jpg", "image/jpeg"].includes(
+        file.type
+      )
+    ) {
+      return res.status(400);
+    }
+    file.path = dirname + "/file_upload/" + bill.id + "_" + file.name;
+  });
+  form.on("file", async (name, file) => {
+    console.log("UPLOADED " + file.name);
+    let file_created = await dbFile.addFile(
+      bill.id + "_" + file.name,
+      dirname + "/file_upload/",
+      bill
+    );
+    console.log(file_created);
+    res.send(file_created);
+  });
+});
+
+router.get("/", async (req, res, next) => {
+  let bill_id = req.query.billId;
+  const file_id = req.query.fileId;
+  if (bill_id == undefined || file_id == undefined) {
+    return res.status(400).send("Bad Request\nWrong parameters");
+  }
+  bill_id = bill_id.split("/")[0];
+  let bill = await dbBill.findById(bill_id, user, res);
+  if (bill.attachment == null) {
+    return res.status(400).send("Bad Request\nNo file");
+  }
+  if (bill.file.file_id != file_id) {
+    return res.status(400).send("Bad Request\nWrong File Id");
+  }
+
+  return res.status(200).send(bill.file);
+});
+
+router.delete("/", async (req, res, next) => {
+  let bill_id = req.query.billId;
+  const file_id = req.query.fileId;
+  if (bill_id == undefined || file_id == undefined) {
+    return res.status(400).send("Bad Request\nWrong parameters");
+  }
+  bill_id = bill_id.split("/")[0];
+  let bill = await dbBill.findById(bill_id, user, res);
+  if (bill.attachment == null) {
+    return res.status(400).send("Bad Request\nNo file");
+  }
+  if (bill.file.file_id != file_id) {
+    return res.status(400).send("Bad Request\nWrong File Id");
+  }
+  let file_path = bill.file.url + "/" + bill.file.file_name;
+  let fs = require("fs");
+  fs.unlinkSync(file_path);
+  dbFile.deleteById(file_id, res);
 });
 
 module.exports = router;
