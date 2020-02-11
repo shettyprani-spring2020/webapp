@@ -9,6 +9,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     file_name: DataTypes.STRING,
     url: DataTypes.STRING,
+    metadata: DataTypes.JSON,
     upload_date: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW
