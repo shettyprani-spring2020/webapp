@@ -1,9 +1,10 @@
 let models = require("../models");
 let dbBill = require("./BillDb");
-addFile = (file_name, file_url, bill) => {
+addFile = (file_name, file_url, metadata, bill) => {
   return models.File.create({
     file_name: file_name,
-    url: file_url
+    url: file_url,
+    metadata: metadata
   }).then(file => {
     file = file.toJSON();
     bill.attachment = file.file_id;

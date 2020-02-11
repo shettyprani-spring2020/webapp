@@ -171,23 +171,12 @@ router.post("/", async (req, res, next) => {
     return res.status(400).send("Bad Request");
   }
   let bill = await dbBill.findById(id, user, res);
-  if (bill.attachment != null) {
+  if (bill.file != null) {
     return res.status(400).send("Bad Request\nFile already exists");
   }
-  // ---------------------
-
-  //
-  // // if (
-  // //   !["application/pdf", "image/png", "image/jpg", "image/jpeg"].includes(
-  // //     file_info.type
-  // //   )
-  // // ) {
-  // //   return res.status(400).send("Bad Request\nWrong file format");
-  // // }
   let form = new formidable.IncomingForm();
+  form.hash = "md5";
   form.parse(req);
-
-  console.log("HEREEEE");
   form.on("fileBegin", (name, file) => {
     if (
       !["application/pdf", "image/png", "image/jpg", "image/jpeg"].includes(
@@ -200,12 +189,18 @@ router.post("/", async (req, res, next) => {
   });
   form.on("file", async (name, file) => {
     console.log("UPLOADED " + file.name);
+    const metadata = {
+      size: file.size,
+      type: file.type,
+      hash: file.hash,
+      lastModifiedDate: file.lastModifiedDate
+    };
     let file_created = await dbFile.addFile(
       bill.id + "_" + file.name,
       dirname + "/file_upload/",
+      metadata,
       bill
     );
-    console.log(file_created);
     res.send(file_created);
   });
 });
@@ -218,7 +213,7 @@ router.get("/", async (req, res, next) => {
   }
   bill_id = bill_id.split("/")[0];
   let bill = await dbBill.findById(bill_id, user, res);
-  if (bill.attachment == null) {
+  if (bill.file == null) {
     return res.status(400).send("Bad Request\nNo file");
   }
   if (bill.file.file_id != file_id) {
@@ -236,7 +231,7 @@ router.delete("/", async (req, res, next) => {
   }
   bill_id = bill_id.split("/")[0];
   let bill = await dbBill.findById(bill_id, user, res);
-  if (bill.attachment == null) {
+  if (bill.file == null) {
     return res.status(400).send("Bad Request\nNo file");
   }
   if (bill.file.file_id != file_id) {

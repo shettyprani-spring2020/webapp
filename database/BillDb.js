@@ -39,6 +39,7 @@ findAll = (user, res) => {
     },
     subQuery: true,
     raw: false,
+    attributes: { exclude: ["attachment"] },
     include: [
       {
         model: models.File,
@@ -61,6 +62,7 @@ findById = (id, user, res) => {
     },
     subQuery: false,
     limit: 1,
+    attributes: { exclude: ["attachment"] },
     include: [
       {
         model: models.File,
