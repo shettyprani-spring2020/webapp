@@ -37,8 +37,14 @@ findAll = (user, res) => {
     where: {
       owner_id: user.id
     },
-    subQuery: false,
-    raw: false
+    subQuery: true,
+    raw: false,
+    include: [
+      {
+        model: models.File,
+        as: "file"
+      }
+    ]
   }).then(bills => {
     return bills;
   });
@@ -49,12 +55,18 @@ findAll = (user, res) => {
 // 401 - Bill doesn't belong to user
 // return - return JSON of bill queried
 findById = (id, user, res) => {
-  models.Bill.findAll({
+  return models.Bill.findAll({
     where: {
       id: id
     },
     subQuery: false,
-    limit: 1
+    limit: 1,
+    include: [
+      {
+        model: models.File,
+        as: "file"
+      }
+    ]
   }).then(bills => {
     if (bills.length == 0) {
       return res.status(404).send("Not found");
@@ -63,7 +75,7 @@ findById = (id, user, res) => {
       console.log();
       return res.status(401).send("Unauthorized");
     }
-    return res.status(200).send(bills[0]);
+    return bills[0].toJSON();
   });
 };
 
@@ -92,7 +104,6 @@ DeleteById = (id, user, res) => {
     if (bills[0].owner_id != user.id) {
       return res.status(401).send("Unauthorized");
     }
-    console.log("HEREEE");
     models.Bill.destroy({
       where: {
         id: id
@@ -117,7 +128,7 @@ DeleteById = (id, user, res) => {
 // 401 - Bill doesn't belong to user
 // return - JSON of updated Bill
 UpdateById = (id, put, user, res) => {
-  models.Bill.findAll({
+  return models.Bill.findAll({
     where: {
       id: id
     },
@@ -137,7 +148,7 @@ UpdateById = (id, put, user, res) => {
       return res.status(401).send("Unauthorized");
     }
 
-    models.Bill.update(put, {
+    return models.Bill.update(put, {
       where: {
         id: id
       },
@@ -150,8 +161,8 @@ UpdateById = (id, put, user, res) => {
           as: "user"
         }
       ]
-    }).then(ody => {
-      findById(id, user, res);
+    }).then(() => {
+      return findById(id, user, res);
     });
   });
 };

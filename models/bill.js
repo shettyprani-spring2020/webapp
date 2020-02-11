@@ -1,4 +1,5 @@
 "use strict";
+
 module.exports = (sequelize, DataTypes) => {
   var Bill = sequelize.define("Bill", {
     id: {
@@ -33,7 +34,27 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.ENUM,
       values: ["paid", "due", "past_due", "no_payment_required"]
     }
+    // attachment: {
+    //   type: DataTypes.UUID,
+    //   allowNull: true,
+    //   references: {
+    //     model: "Files",
+    //     key: "file_id"
+    //   }
+    // }
   });
+
+  Bill.associate = models => {
+    const { User, Bill, File } = models;
+    File.hasOne(Bill, {
+      as: "file",
+      foreignKey: "attachment"
+    });
+    Bill.belongsTo(File, {
+      as: "file",
+      foreignKey: "attachment"
+    });
+  };
 
   return Bill;
 };
