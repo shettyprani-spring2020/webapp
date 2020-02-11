@@ -175,6 +175,7 @@ router.post("/", async (req, res, next) => {
     return res.status(400).send("Bad Request\nFile already exists");
   }
   let form = new formidable.IncomingForm();
+  form.hash = "md5";
   form.parse(req);
   form.on("fileBegin", (name, file) => {
     if (
@@ -191,6 +192,7 @@ router.post("/", async (req, res, next) => {
     const metadata = {
       size: file.size,
       type: file.type,
+      hash: file.hash,
       lastModifiedDate: file.lastModifiedDate
     };
     let file_created = await dbFile.addFile(
@@ -199,7 +201,6 @@ router.post("/", async (req, res, next) => {
       metadata,
       bill
     );
-    console.log(file_created);
     res.send(file_created);
   });
 });
