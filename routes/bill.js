@@ -99,7 +99,7 @@ router.get(/\/(:id)?/, (req, res, next) => {
 });
 
 // Delete bill based on ID
-router.delete("/", (req, res, next) => {
+router.delete("/", async (req, res, next) => {
   if (req.originalUrl.includes("file")) {
     return next();
   }
@@ -111,6 +111,10 @@ router.delete("/", (req, res, next) => {
   if (id == undefined) {
     return res.status(400).send("Bad Request");
   }
+  let bill = await dbBill.findById(id, user, res);
+  let file_path = bill.file.url + "/" + bill.file.file_name;
+  let fs = require("fs");
+  fs.unlinkSync(file_path);
   dbBill.DeleteById(id, user, res);
 });
 
@@ -177,13 +181,23 @@ router.post("/", async (req, res, next) => {
   let form = new formidable.IncomingForm();
   form.hash = "md5";
   form.parse(req);
+  form.onPart = function(part) {
+    console.log(part);
+    if (!part.filename || !part.filename.match(/\.(jpg|jpeg|png|pdf)$/i)) {
+      console.log(part.filename + " is not allowed");
+      return res.status(400).send("Format not allowed");
+    } else {
+      this.handlePart(part);
+    }
+  };
   form.on("fileBegin", (name, file) => {
+    console.log(file.length);
     if (
       !["application/pdf", "image/png", "image/jpg", "image/jpeg"].includes(
         file.type
       )
     ) {
-      return res.status(400);
+      return res.status(400).send();
     }
     file.path = dirname + "/file_upload/" + bill.id + "_" + file.name;
   });
