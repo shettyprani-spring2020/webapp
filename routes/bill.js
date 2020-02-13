@@ -99,7 +99,7 @@ router.get(/\/(:id)?/, (req, res, next) => {
 });
 
 // Delete bill based on ID
-router.delete("/", (req, res, next) => {
+router.delete("/", async (req, res, next) => {
   if (req.originalUrl.includes("file")) {
     return next();
   }
@@ -111,6 +111,10 @@ router.delete("/", (req, res, next) => {
   if (id == undefined) {
     return res.status(400).send("Bad Request");
   }
+  let bill = await dbBill.findById(id, user, res);
+  let file_path = bill.file.url + "/" + bill.file.file_name;
+  let fs = require("fs");
+  fs.unlinkSync(file_path);
   dbBill.DeleteById(id, user, res);
 });
 

@@ -95,8 +95,8 @@ DeleteById = (id, user, res) => {
     limit: 1,
     include: [
       {
-        model: models.User,
-        as: "user"
+        model: models.File,
+        as: "file"
       }
     ]
   }).then(bills => {
@@ -106,22 +106,50 @@ DeleteById = (id, user, res) => {
     if (bills[0].owner_id != user.id) {
       return res.status(401).send("Unauthorized");
     }
-    models.Bill.destroy({
-      where: {
-        id: id
-      },
-      subQuery: false,
-      raw: true,
-      limit: 1,
-      include: [
-        {
-          model: models.User,
-          as: "user"
+
+    if (bills[0]["file.file_id"]) {
+      const file_id = bills[0]["file.file_id"];
+      console.log(file_id);
+      models.File.destroy({
+        where: {
+          file_id: file_id
         }
-      ]
-    }).then(() => {
-      return res.status(204).send();
-    });
+      }).then(() => {
+        models.Bill.destroy({
+          where: {
+            id: id
+          },
+          subQuery: false,
+          raw: true,
+          limit: 1,
+          include: [
+            {
+              model: models.User,
+              as: "user"
+            }
+          ]
+        }).then(() => {
+          return res.status(204).send();
+        });
+      });
+    } else {
+      models.Bill.destroy({
+        where: {
+          id: id
+        },
+        subQuery: false,
+        raw: true,
+        limit: 1,
+        include: [
+          {
+            model: models.User,
+            as: "user"
+          }
+        ]
+      }).then(() => {
+        return res.status(204).send();
+      });
+    }
   });
 };
 
