@@ -17,7 +17,7 @@ if (env == "test") {
     config_test
   );
 } else {
-  const config = require(__dirname + "/../config/config.json")[env];
+  const config = require(__dirname + "/../../config/config.json")[env];
   sequelize = new Sequelize(
     config.database,
     config.username,

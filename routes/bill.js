@@ -9,7 +9,7 @@ let formidable = require("formidable");
 // authenticated user variable
 let user;
 
-let dirname = "/home/pranit/Desktop";
+let dirname = ".";
 // Authenticate all end points
 router.all("*", async (req, res, next) => {
   let info = auth(req);
