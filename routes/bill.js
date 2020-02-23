@@ -6,6 +6,13 @@ let dbUser = require("../database/UserDb");
 let dbBill = require("../database/BillDb");
 let dbFile = require("../database/FileDb");
 let formidable = require("formidable");
+let Transform = require("stream").Transform;
+let AWS = require("aws-sdk");
+let fs = require("fs");
+let s3_config = require("../../config/s3_bucket.json");
+s3 = new AWS.S3();
+let uploadParams = { Bucket: s3_config.s3_bucket_name, Key: "", Body: "" };
+
 // authenticated user variable
 let user;
 
@@ -112,9 +119,16 @@ router.delete("/", async (req, res, next) => {
     return res.status(400).send("Bad Request");
   }
   let bill = await dbBill.findById(id, user, res);
-  let file_path = bill.file.url + "/" + bill.file.file_name;
-  let fs = require("fs");
-  fs.unlinkSync(file_path);
+  uploadParams.Key = bill.file_name;
+  s3.deleteObject(uploadParams, function(err, data) {
+    if (err) {
+      console.log("Error deleting file"); // error
+      res.status(500).send("Error deleting file");
+    } else {
+      console.log("Delete Successful");
+      res.write("Delete Successful\n");
+    }
+  });
   dbBill.DeleteById(id, user, res);
 });
 
@@ -181,6 +195,7 @@ router.post("/", async (req, res, next) => {
   let form = new formidable.IncomingForm();
   form.hash = "md5";
   form.parse(req);
+  form.uploadDir = "file_upload";
   form.onPart = function(part) {
     console.log(part);
     if (!part.filename || !part.filename.match(/\.(jpg|jpeg|png|pdf)$/i)) {
@@ -191,7 +206,6 @@ router.post("/", async (req, res, next) => {
     }
   };
   form.on("fileBegin", (name, file) => {
-    console.log(file.length);
     if (
       !["application/pdf", "image/png", "image/jpg", "image/jpeg"].includes(
         file.type
@@ -199,7 +213,34 @@ router.post("/", async (req, res, next) => {
     ) {
       return res.status(400).send();
     }
-    file.path = dirname + "/file_upload/" + bill.id + "_" + file.name;
+    file.on("error", e => this._error(e));
+    file.open = function() {
+      this._writeStream = new Transform({
+        transform(chunk, encoding, callback) {
+          callback(null, chunk);
+        }
+      });
+
+      this._writeStream.on("error", e => this.emit("error", e));
+      uploadParams.Body = this._writeStream;
+      uploadParams.Key = bill.id + "_" + file.name;
+      s3.upload(uploadParams, (err, data) => {
+        if (err) {
+          console.log("Error", err);
+          res.status(500).send("ERROR uploading");
+        }
+        if (data) {
+          console.log("Upload Success", data.Location);
+        }
+      });
+    };
+    file.end = function(cb) {
+      this._writeStream.on("finish", () => {
+        this.emit("end");
+        cb();
+      });
+      this._writeStream.end();
+    };
   });
   form.on("file", async (name, file) => {
     console.log("UPLOADED " + file.name);
@@ -211,7 +252,7 @@ router.post("/", async (req, res, next) => {
     };
     let file_created = await dbFile.addFile(
       bill.id + "_" + file.name,
-      dirname + "/file_upload/",
+      dirname + s3_config.s3_bucket_name,
       metadata,
       bill
     );
@@ -251,10 +292,19 @@ router.delete("/", async (req, res, next) => {
   if (bill.file.file_id != file_id) {
     return res.status(400).send("Bad Request\nWrong File Id");
   }
-  let file_path = bill.file.url + "/" + bill.file.file_name;
-  let fs = require("fs");
-  fs.unlinkSync(file_path);
-  dbFile.deleteById(file_id, res);
+  let deleteParams = {
+    Bucket: s3_config.s3_bucket_name,
+    Key: bill.file.file_name
+  };
+  s3.deleteObject(deleteParams, function(err, data) {
+    if (err) {
+      console.log("Error deleting file");
+      res.status(500).send("Error deleting file");
+    } else {
+      console.log("Delete Successful " + data);
+      dbFile.deleteById(file_id, res);
+    }
+  });
 });
 
 module.exports = router;

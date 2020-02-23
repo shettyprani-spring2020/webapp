@@ -4,6 +4,7 @@ let UserValidator = require("../validator/UserValidator");
 let dbUser = require("../database/UserDb");
 let hash = require("../validator/Bcrypt");
 let auth = require("basic-auth");
+let AWS = require("aws-sdk");
 
 // Check all self endpoints for authentication
 router.all("/self", async (req, res, next) => {
