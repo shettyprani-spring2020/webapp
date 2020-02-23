@@ -126,10 +126,9 @@ router.delete("/", async (req, res, next) => {
       res.status(500).send("Error deleting file");
     } else {
       console.log("Delete Successful");
-      res.write("Delete Successful\n");
+      dbBill.DeleteById(id, user, res);
     }
   });
-  dbBill.DeleteById(id, user, res);
 });
 
 // Update bill based on ID
