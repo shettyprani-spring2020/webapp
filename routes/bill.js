@@ -9,9 +9,6 @@ let formidable = require("formidable");
 let Transform = require("stream").Transform;
 let AWS = require("aws-sdk");
 let fs = require("fs");
-let s3_config = require("../../config/s3_bucket.json");
-s3 = new AWS.S3();
-let uploadParams = { Bucket: s3_config.s3_bucket_name, Key: "", Body: "" };
 
 // authenticated user variable
 let user;
@@ -183,6 +180,9 @@ router.put("/", (req, res, next) => {
 
 router.post("/", async (req, res, next) => {
   // ---------------------
+  let s3_config = require("../../config/s3_bucket.json");
+  s3 = new AWS.S3();
+  let uploadParams = { Bucket: s3_config.s3_bucket_name, Key: "", Body: "" };
   let id = req.query.id.split("/")[0];
   if (!req.originalUrl.includes("file")) {
     return res.status(400).send("Bad Request");
@@ -291,6 +291,8 @@ router.delete("/", async (req, res, next) => {
   if (bill.file.file_id != file_id) {
     return res.status(400).send("Bad Request\nWrong File Id");
   }
+  let s3_config = require("../../config/s3_bucket.json");
+  s3 = new AWS.S3();
   let deleteParams = {
     Bucket: s3_config.s3_bucket_name,
     Key: bill.file.file_name
