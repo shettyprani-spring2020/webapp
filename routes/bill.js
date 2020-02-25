@@ -213,7 +213,7 @@ router.post("/", async (req, res, next) => {
       return res.status(400).send();
     }
     file.on("error", e => this._error(e));
-    file.open = function() {
+    file.open = async function() {
       this._writeStream = new Transform({
         transform(chunk, encoding, callback) {
           callback(null, chunk);
@@ -223,13 +223,26 @@ router.post("/", async (req, res, next) => {
       this._writeStream.on("error", e => this.emit("error", e));
       uploadParams.Body = this._writeStream;
       uploadParams.Key = bill.id + "_" + file.name;
-      s3.upload(uploadParams, (err, data) => {
+      await s3.upload(uploadParams, async (err, data) => {
         if (err) {
           console.log("Error", err);
           res.status(500).send("ERROR uploading");
         }
         if (data) {
           console.log("Upload Success", data.Location);
+          const metadata = {
+            size: file.size,
+            type: file.type,
+            hash: file.hash,
+            lastModifiedDate: file.lastModifiedDate
+          };
+          let file_created = await dbFile.addFile(
+            bill.id + "_" + file.name,
+            dirname + s3_config.s3_bucket_name,
+            metadata,
+            bill
+          );
+          res.send(file_created);
         }
       });
     };
@@ -243,19 +256,6 @@ router.post("/", async (req, res, next) => {
   });
   form.on("file", async (name, file) => {
     console.log("UPLOADED " + file.name);
-    const metadata = {
-      size: file.size,
-      type: file.type,
-      hash: file.hash,
-      lastModifiedDate: file.lastModifiedDate
-    };
-    let file_created = await dbFile.addFile(
-      bill.id + "_" + file.name,
-      dirname + s3_config.s3_bucket_name,
-      metadata,
-      bill
-    );
-    res.send(file_created);
   });
 });
 
