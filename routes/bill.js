@@ -116,16 +116,23 @@ router.delete("/", async (req, res, next) => {
     return res.status(400).send("Bad Request");
   }
   let bill = await dbBill.findById(id, user, res);
-  uploadParams.Key = bill.file_name;
-  s3.deleteObject(uploadParams, function(err, data) {
-    if (err) {
-      console.log("Error deleting file"); // error
-      res.status(500).send("Error deleting file");
-    } else {
-      console.log("Delete Successful");
-      dbBill.DeleteById(id, user, res);
-    }
-  });
+  if (bill.file != undefined) {
+    let s3_config = require("../../config/s3_bucket.json");
+    s3 = new AWS.S3();
+    let deleteParams = {
+      Bucket: s3_config.s3_bucket_name,
+      Key: bill.file.file_name
+    };
+    s3.deleteObject(deleteParams, function(err, data) {
+      if (err) {
+        console.log("Error deleting file"); // error
+        res.status(500).send("Error deleting file");
+      } else {
+        console.log("Delete Successful");
+        dbBill.DeleteById(id, user, res);
+      }
+    });
+  }
 });
 
 // Update bill based on ID
