@@ -73,7 +73,7 @@ jobs:
             aws deploy create-deployment
             --application-name ${APPLICATION_NAME}
             --deployment-group-name ${DEVELOPMENT_GROUP_NAME}\
-            --file-exists-behavior OVERWIRTE
+            --file-exists-behavior OVERWRITE
             --s3-location bucket=${S3BUCKET},key=${CIRCLE_PROJECT_REPONAME}_${CIRCLE_BUILD_NUM}.zip,bundleType=zip
 workflows:
   version: 2
