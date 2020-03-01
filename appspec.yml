@@ -4,11 +4,23 @@ files:
   - source: /
     destination: /home/ubuntu/
 hooks:
-  AfterInstall:
-    - location: scripts/npm-install.sh
-      runas: root
+  BeforeInstall:
+    - location: scripts/BeforeInstall.sh
       timeout: 300
-  ApplicationStart:
-    - location: scripts/npm-start.sh
       runas: root
+  AfterInstall:
+    - location: scripts/AfterInstall.sh
+      timeout: 600
+      runas: ec2-user
+  ApplicationStart:
+    - location: scripts/ApplicationStart.sh
+      timeout: 120
+      runas: ec2-user
+  ApplicationStop:
+    - location: scripts/ApplicationStop.sh
+      timeout: 120
+      runas: ec2-user
+  ValidateService:
+    - location: scripts/ValidateService.sh
       timeout: 60
+      runas: ec2-user
