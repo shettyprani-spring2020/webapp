@@ -36,7 +36,7 @@ jobs:
             unzip awscliv2.zip
             sudo ./aws/install
       - run:
-          name: test
+          name: Showing files in folder
           command: |
             mkdir cloud_app
             ls -l
@@ -60,7 +60,7 @@ jobs:
           command: >
             aws deploy push
             --application-name ${APPLICATION_NAME}
-            --s3-locaiton s3://${S3BUCKET}/${CIRCLE_PROJECT_REPONAME}_${CIRCLE_BUILD_NUM}.zip
+            --s3-location s3://${S3BUCKET}/${CIRCLE_PROJECT_REPONAME}_${CIRCLE_BUILD_NUM}.zip
       - run:
           name: Create new revision deployment
           command: >
