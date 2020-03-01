@@ -43,7 +43,7 @@ jobs:
       - run:
           name: Move node files to build folder
           command: |
-            mv -t ./cloud_app bin database migrations models node_modules public routes seeders validator views
+            mv -t ./cloud_app bin database models node_modules public routes validator views
             mv *.json ./cloud_app
             mv app.js ./cloud_app
             cd cloud_app
