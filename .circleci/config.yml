@@ -47,7 +47,7 @@ jobs:
             mkdir cloud_app
             ls -l
       - run:
-          name: Move node files to build folder
+          name: Move node files to cloud_app folder
           command: |
             mv -t ./cloud_app bin database models node_modules public routes validator views
             mv *.json ./cloud_app
@@ -59,13 +59,18 @@ jobs:
       - run:
           name: Archive new revision ${CIRCLE_BUILD_NUM}
           command: |
-            zip -r ${CIRCLE_PROJECT_REPONAME}_${CIRCLE_BUILD_NUM}.zip cloud_app scripts appsspec.yml
+            mkdir ${CIRCLE_PROJECT_REPONAME}_${CIRCLE_BUILD_NUM}
+            mv -t ./${CIRCLE_PROJECT_REPONAME}_${CIRCLE_BUILD_NUM} cloud_app scripts appspec.yml
             ls -l
+            cd ${CIRCLE_PROJECT_REPONAME}_${CIRCLE_BUILD_NUM}
+            ls -l
+            cd ..
       - run:
           name: Push to AWS S3
           command: >
             aws deploy push
             --application-name ${APPLICATION_NAME}
+            --source ./${CIRCLE_PROJECT_REPONAME}_${CIRCLE_BUILD_NUM}
             --s3-location s3://${S3BUCKET}/${CIRCLE_PROJECT_REPONAME}_${CIRCLE_BUILD_NUM}.zip
       - run:
           name: Create new revision deployment
@@ -73,7 +78,7 @@ jobs:
             aws deploy create-deployment
             --application-name ${APPLICATION_NAME}
             --deployment-group-name ${DEVELOPMENT_GROUP_NAME}\
-            --file-exists-behavior OVERWIRTE
+            --file-exists-behavior OVERWRITE
             --s3-location bucket=${S3BUCKET},key=${CIRCLE_PROJECT_REPONAME}_${CIRCLE_BUILD_NUM}.zip,bundleType=zip
 workflows:
   version: 2
