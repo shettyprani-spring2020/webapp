@@ -81,7 +81,7 @@ jobs:
             --application-name ${APPLICATION_NAME}
             --deployment-group-name ${DEVELOPMENT_GROUP_NAME}
             --file-exists-behavior OVERWRITE
-            --ignore-application-stop-failures true
+            --ignore-application-stop-failures
             --s3-location bucket=${S3BUCKET},key=${CIRCLE_PROJECT_REPONAME}_${CIRCLE_BUILD_NUM}.zip,bundleType=zip
 workflows:
   version: 2
