@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-export $WEBAPP=/home/ubuntu/cloud_app
-export $SCRIPT=/home/ubuntu/scripts
+WEBAPP=/home/ubuntu/cloud_app
+SCRIPT=/home/ubuntu/scripts
 
 if [ -d $WEBAPP ]
 then
