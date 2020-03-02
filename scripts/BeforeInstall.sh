@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-set -e
 
 WEBAPP=/home/ubuntu/cloud_app
 SCRIPT=/home/ubuntu/scripts

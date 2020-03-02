@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-set -e
-
 WEBAPP=/home/ubuntu/cloud_app
 ENV="production"
 USER="ec2-user"
