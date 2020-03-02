@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 set -e
 
-export $WEBAPP=/home/ubuntu/cloud_app
-
-cd $WEBAPP
+cd /home/ubuntu/cloud_app
 pm2 stop www || true

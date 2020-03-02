@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-export $WEBAPP=/home/ubuntu/cloud_app
+WEBAPP=/home/ubuntu/cloud_app
 ENV="production"
 USER="ec2-user"
 if [ ! -z "$DEPLOYMENT_GROUP_NAME" ]; then
