@@ -7,20 +7,20 @@ hooks:
   BeforeInstall:
     - location: scripts/BeforeInstall.sh
       timeout: 300
-      runas: root
+      runas: ubuntu
   AfterInstall:
     - location: scripts/AfterInstall.sh
       timeout: 600
-      runas: ec2-user
+      runas: ubuntu
   ApplicationStart:
     - location: scripts/ApplicationStart.sh
       timeout: 120
-      runas: ec2-user
+      runas: ubuntu
   ApplicationStop:
     - location: scripts/ApplicationStop.sh
       timeout: 120
-      runas: ec2-user
+      runas: ubuntu
   ValidateService:
     - location: scripts/ValidateService.sh
       timeout: 60
-      runas: ec2-user
+      runas: ubuntu
