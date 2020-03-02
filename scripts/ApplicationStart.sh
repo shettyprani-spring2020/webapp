@@ -6,5 +6,5 @@ if [ ! -z "$DEPLOYMENT_GROUP_NAME" ]; then
 fi
 
 cd $WEBAPP
-NODE_ENV=production pm2 start bin/www -n www -i 0
+NODE_ENV=production pm2 start npm -- start
    
