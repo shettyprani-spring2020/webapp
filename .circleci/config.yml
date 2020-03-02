@@ -57,6 +57,14 @@ jobs:
             cd ..
             ls -l
       - run:
+          name: Give scripts executable permission
+          command: |
+            cd scripts
+            sudo chmod +x *.sh
+            ls -al
+            cd ..
+            ls -l
+      - run:
           name: Archive new revision
           command: |
             mkdir ${CIRCLE_PROJECT_REPONAME}_${CIRCLE_BUILD_NUM}
