@@ -2,6 +2,7 @@
 
 WEBAPP=/home/ubuntu/cloud_app
 SCRIPT=/home/ubuntu/scripts
+APPSPEC=/home/ubuntu/appspec.yml 
 
 if [ -d $WEBAPP ]
 then
@@ -12,7 +13,10 @@ if [ -d $SCRIPT ]
 then
     rm -rf $SCRIPT
 fi
-
+if [ -f $APPSPEC]
+then
+    rm -f $APPSPEC
+fi
 
 
 # install pm2 module globaly
