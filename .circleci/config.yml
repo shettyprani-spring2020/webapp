@@ -45,11 +45,6 @@ jobs:
           name: Install npm less
           command: sudo apt-get install less
       - run:
-          name: AWS cli version
-          command: |
-            aws --version
-            aws help
-      - run:
           name: Showing files in folder
           command: |
             mkdir cloud_app
