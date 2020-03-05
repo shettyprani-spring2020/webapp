@@ -45,7 +45,6 @@ jobs:
           name: Install aws dependencies
           command: |
             sudo apt-get install -y less
-            sudo apt-get install -y groff
       - run:
           name: Showing files in folder
           command: |
