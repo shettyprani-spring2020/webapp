@@ -27,7 +27,7 @@ jobs:
       - run:
           name: Install npm
           command: |
-            npm install --production
+            npm install
             ls -l
       - run:
           name: Install AWS cli
@@ -41,6 +41,9 @@ jobs:
             aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
             aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
             aws configure set default.region ${AWS_REGION}
+      - run:
+          name: Install npm less
+          command: sudo npm install -g less
       - run:
           name: Showing files in folder
           command: |
@@ -88,6 +91,7 @@ jobs:
             aws deploy create-deployment
             --application-name ${APPLICATION_NAME}
             --deployment-group-name ${DEVELOPMENT_GROUP_NAME}
+            --file-exists-behavior OVERWRITE
             --ignore-application-stop-failures
             --s3-location bucket=${S3BUCKET},key=${CIRCLE_PROJECT_REPONAME}_${CIRCLE_BUILD_NUM}.zip,bundleType=zip
 workflows:
@@ -101,4 +105,8 @@ workflows:
                 - master
   build_and_deploy:
     jobs:
-      - build
+      - build:
+          filters:
+            branches:
+              only:
+                - a7
