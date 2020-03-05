@@ -43,7 +43,12 @@ jobs:
             aws configure set default.region ${AWS_REGION}
       - run:
           name: Install npm less
-          command: sudo npm install -g less
+          command: sudo apt-get install less
+      - run:
+          name: AWS cli version
+          command: |
+            aws --version
+            aws help
       - run:
           name: Showing files in folder
           command: |
