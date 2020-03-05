@@ -27,7 +27,7 @@ jobs:
       - run:
           name: Install npm
           command: |
-            npm install
+            npm install --production
             ls -l
       - run:
           name: Install AWS cli
@@ -101,8 +101,4 @@ workflows:
                 - master
   build_and_deploy:
     jobs:
-      - build:
-          filters:
-            branches:
-              only:
-                - a7
+      - build
