@@ -42,13 +42,13 @@ jobs:
             aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
             aws configure set default.region ${AWS_REGION}
       - run:
+          name: Install npm less
+          command: sudo apt-get install less
+      - run:
           name: AWS cli version
           command: |
             aws --version
             aws help
-      - run:
-          name: Install npm less
-          command: sudo npm install -g less
       - run:
           name: Showing files in folder
           command: |
