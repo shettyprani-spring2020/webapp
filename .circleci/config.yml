@@ -3,7 +3,7 @@ jobs:
   pr_check:
     working_directory: ~/project
     docker:
-      - image: circleci/node:10.16.3 
+      - image: circleci/node:10.16.3
       - image: circleci/mysql:8.0.3
         environment:
           MYSQL_ROOT_PASSWORD: rootpw
@@ -21,21 +21,89 @@ jobs:
 
   build:
     docker:
-      - image: circleci/node:10.16.3 
+      - image: circleci/node:10.16.3
     steps:
       - checkout
       - run:
           name: Install npm
-          command: npm install
-      # - run:
-      #     name: npm-start
-      #     command: npm start
-
+          command: |
+            npm install --production
+            ls -l
+      - run:
+          name: Install AWS cli
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+      - run:
+          name: AWS configure
+          command: |
+            aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
+            aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
+            aws configure set default.region ${AWS_REGION}
+      - run:
+          name: Install aws dependencies
+          command: |
+            sudo apt-get install -y less
+      - run:
+          name: Showing files in folder
+          command: |
+            mkdir cloud_app
+            ls -l
+      - run:
+          name: Move node files to cloud_app folder
+          command: |
+            mv -t ./cloud_app bin database models node_modules public routes validator views
+            mv *.json ./cloud_app
+            mv app.js ./cloud_app
+            cd cloud_app
+            ls -l
+            cd ..
+            ls -l
+      - run:
+          name: Give scripts executable permission
+          command: |
+            cd scripts
+            sudo chmod +x *.sh
+            ls -al
+            cd ..
+            ls -l
+      - run:
+          name: Archive new revision
+          command: |
+            mkdir ${CIRCLE_PROJECT_REPONAME}_${CIRCLE_BUILD_NUM}
+            mv -t ./${CIRCLE_PROJECT_REPONAME}_${CIRCLE_BUILD_NUM} cloud_app scripts appspec.yml
+            ls -l
+            pwd
+            cd ${CIRCLE_PROJECT_REPONAME}_${CIRCLE_BUILD_NUM}
+            pwd
+            ls -l
+            cd ..
+      - run:
+          name: Push to AWS S3
+          command: >
+            aws deploy push
+            --application-name ${APPLICATION_NAME}
+            --source ./${CIRCLE_PROJECT_REPONAME}_${CIRCLE_BUILD_NUM}
+            --s3-location s3://${S3BUCKET}/${CIRCLE_PROJECT_REPONAME}_${CIRCLE_BUILD_NUM}.zip
+      - run:
+          name: Create new revision deployment
+          command: >
+            aws deploy create-deployment
+            --application-name ${APPLICATION_NAME}
+            --deployment-group-name ${DEVELOPMENT_GROUP_NAME}
+            --file-exists-behavior OVERWRITE
+            --ignore-application-stop-failures
+            --s3-location bucket=${S3BUCKET},key=${CIRCLE_PROJECT_REPONAME}_${CIRCLE_BUILD_NUM}.zip,bundleType=zip
 workflows:
   version: 2
   pr_check_test:
     jobs:
-       - pr_check
+      - pr_check:
+          filters:
+            branches:
+              only:
+                - master
   build_and_deploy:
     jobs:
       - build:
