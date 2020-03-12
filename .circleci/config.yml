@@ -110,4 +110,4 @@ workflows:
           filters:
             branches:
               only:
-                - a7
+                - master
