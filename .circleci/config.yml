@@ -27,7 +27,7 @@ jobs:
       - run:
           name: Install npm
           command: |
-            npm install
+            npm install --production
             ls -l
       - run:
           name: Install AWS cli
