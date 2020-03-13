@@ -1,6 +1,6 @@
 let models = require("../models");
 let hashing = require("../validator/Bcrypt");
-
+let logger = require("../logger/log");
 // find user details
 // return JSON user details
 findAll = (key, value) => {
@@ -26,10 +26,11 @@ updateUser = (email_address, put) => {
     where: { email_address }
   })
     .then(res => {
-      console.log(res);
+      logger.info("Successfully updated user ");
       return true;
     })
     .catch(() => {
+      logger.error("Error updating user");
       return false;
     });
 };
@@ -49,11 +50,13 @@ addUser = post => {
     })
   )
     .then(data => {
+      logger.info("Added new user");
       let user = data.toJSON();
       delete user["password"];
       return user;
     })
     .catch(err => {
+      logger.error("Error adding user");
       return err;
     });
 };
@@ -68,6 +71,7 @@ deleteByEmail = email => {
       return true;
     })
     .catch(() => {
+      logger.error("Error deleting user");
       return false;
     });
 };

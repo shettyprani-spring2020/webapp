@@ -10,6 +10,9 @@ let Transform = require("stream").Transform;
 let AWS = require("aws-sdk");
 let fs = require("fs");
 
+let StatsD = require("hot-shots"),
+  client = new StatsD();
+
 // authenticated user variable
 let user;
 
@@ -35,6 +38,7 @@ router.all("*", async (req, res, next) => {
 
 // Create new bills only will all fields are provided
 router.post("/", (req, res, next) => {
+  client.increment("new_bill", 1);
   const Bill = req.body;
   if (req.query.id != undefined) {
     next();
@@ -82,6 +86,7 @@ router.post("/", (req, res, next) => {
 // Get ALL details or
 // Get only detail of id provided
 router.get(/\/(:id)?/, (req, res, next) => {
+  client.increment("get_bill", 1);
   const url = req.originalUrl;
   if (url.includes("file")) {
     next();
@@ -104,6 +109,7 @@ router.get(/\/(:id)?/, (req, res, next) => {
 
 // Delete bill based on ID
 router.delete("/", async (req, res, next) => {
+  client.increment("delete_bill", 1);
   if (req.originalUrl.includes("file")) {
     return next();
   }
@@ -137,6 +143,7 @@ router.delete("/", async (req, res, next) => {
 
 // Update bill based on ID
 router.put("/", (req, res, next) => {
+  client.increment("update_bill", 1);
   const put = req.body;
   const check = [
     "vendor",
@@ -186,6 +193,7 @@ router.put("/", (req, res, next) => {
 });
 
 router.post("/", async (req, res, next) => {
+  client.increment("new_file", 1);
   // ---------------------
   let s3_config = require("../../config/s3_bucket.json");
   s3 = new AWS.S3();
@@ -267,6 +275,7 @@ router.post("/", async (req, res, next) => {
 });
 
 router.get("/", async (req, res, next) => {
+  client.increment("get_file", 1);
   let bill_id = req.query.billId;
   const file_id = req.query.fileId;
   if (bill_id == undefined || file_id == undefined) {
@@ -285,6 +294,7 @@ router.get("/", async (req, res, next) => {
 });
 
 router.delete("/", async (req, res, next) => {
+  client.increment("delete", 1);
   let bill_id = req.query.billId;
   const file_id = req.query.fileId;
   if (bill_id == undefined || file_id == undefined) {
