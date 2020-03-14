@@ -31,11 +31,13 @@ router.all("/self", async (req, res, next) => {
 
 /* GET users listing. */
 router.get("/self", async function(req, res, next) {
+  let time = new Date();
   client.increment("get_user");
   let info = auth(req);
   let result = await dbUser.findAll("email_address", info.name);
   result = result[0];
   delete result["password"];
+  client.timing("get_user_time", Date.now() - time);
   res.status(200).send(result);
 });
 
@@ -43,6 +45,7 @@ router.get("/self", async function(req, res, next) {
 // Can only PUT if authenticated and all fields provided
 router.put("/self", async function(req, res, next) {
   client.increment("update_user");
+  let time = new Date();
   let put = req.body;
   let keys = Object.keys(put);
   let allowed = ["password", "first_name", "last_name", "email_address"];
@@ -68,12 +71,14 @@ router.put("/self", async function(req, res, next) {
     put.password = hash.encrypt(put.password);
   }
   dbUser.updateUser(name, put);
+  client.timing("update_user_time", Date.now() - time);
   res.status(204).send();
 });
 
 // post end point to create new user
 router.post("/", async function(req, res, next) {
   client.increment("new_user");
+  let time = new Date();
   let post = req.body;
   let result = await UserValidator.main(post);
   if (result != "Passed") {
@@ -83,6 +88,7 @@ router.post("/", async function(req, res, next) {
   dbUser
     .addUser(post, res)
     .then(user => {
+      client.timing("new_user_time", Date.now() - time);
       return res.status(201).send(user);
     })
     .catch(() => {
