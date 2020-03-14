@@ -1,6 +1,8 @@
 let models = require("../models");
 let hashing = require("../validator/Bcrypt");
 let logger = require("../logger/log");
+let StatsD = require("hot-shots"),
+  client = new StatsD();
 // find user details
 // return JSON user details
 findAll = (key, value) => {
@@ -17,6 +19,7 @@ findAll = (key, value) => {
 // update user based on email_address
 // return 204 no content
 updateUser = (email_address, put) => {
+  let time = new Date();
   let update = {};
   for (key of Object.keys(put)) {
     update[key] = put[key];
@@ -27,6 +30,7 @@ updateUser = (email_address, put) => {
   })
     .then(res => {
       logger.info("Successfully updated user ");
+      client.timing("DB_update_user", Date.now() - time);
       return true;
     })
     .catch(() => {
@@ -38,6 +42,7 @@ updateUser = (email_address, put) => {
 // add new user
 // return new user details
 addUser = post => {
+  let time = new Date();
   post.password = hashing.encrypt(post.password);
   return models.User.create(
     (values = {
@@ -53,6 +58,7 @@ addUser = post => {
       logger.info("Added new user");
       let user = data.toJSON();
       delete user["password"];
+      client.timing("DB_add_user", Date.now() - time);
       return user;
     })
     .catch(err => {
@@ -62,12 +68,14 @@ addUser = post => {
 };
 
 deleteByEmail = email => {
+  let time = new Date();
   return models.User.destroy({
     where: {
       emaiL_address: email
     }
   })
     .then(user => {
+      client.timing("DB_delete_user", Date.now() - time);
       return true;
     })
     .catch(() => {

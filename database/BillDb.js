@@ -1,8 +1,11 @@
 let models = require("../models");
 
+let StatsD = require("hot-shots"),
+  client = new StatsD();
 // Add bill
 // return Bill created
 addBill = (Bill, user, res) => {
+  let time = new Date();
   return models.Bill.create(
     {
       vendor: Bill.vendor,
@@ -23,6 +26,7 @@ addBill = (Bill, user, res) => {
     }
   )
     .then(data => {
+      client.timing("DB_add_bill", Date.now() - time);
       return data;
     })
     .catch(err => {
@@ -33,6 +37,7 @@ addBill = (Bill, user, res) => {
 // Find all bills for user
 // return array of all bills
 findAll = (user, res) => {
+  let time = new Date();
   return models.Bill.findAll({
     where: {
       owner_id: user.id
@@ -47,6 +52,7 @@ findAll = (user, res) => {
       }
     ]
   }).then(bills => {
+    client.timing("DB_find_all_bill", Date.now() - time);
     return bills;
   });
 };
@@ -56,6 +62,7 @@ findAll = (user, res) => {
 // 401 - Bill doesn't belong to user
 // return - return JSON of bill queried
 findById = (id, user, res) => {
+  let time = new Date();
   return models.Bill.findAll({
     where: {
       id: id
@@ -77,6 +84,7 @@ findById = (id, user, res) => {
       console.log();
       return res.status(401).send("Unauthorized");
     }
+    client.timing("DB_find_bill", Date.now() - time);
     return bills[0].toJSON();
   });
 };
@@ -86,6 +94,7 @@ findById = (id, user, res) => {
 // 401 - Bill doesn't belong to user
 // return - No content
 DeleteById = (id, user, res) => {
+  let time = new Date();
   models.Bill.findAll({
     where: {
       id: id
@@ -129,6 +138,7 @@ DeleteById = (id, user, res) => {
             }
           ]
         }).then(() => {
+          client.timing("DB_delete_bill", Date.now() - time);
           return res.status(204).send();
         });
       });
@@ -147,6 +157,7 @@ DeleteById = (id, user, res) => {
           }
         ]
       }).then(() => {
+        client.timing("DB_delete_bill", Date.now() - time);
         return res.status(204).send();
       });
     }
@@ -158,6 +169,7 @@ DeleteById = (id, user, res) => {
 // 401 - Bill doesn't belong to user
 // return - JSON of updated Bill
 UpdateById = (id, put, user, res) => {
+  let time = new Date();
   return models.Bill.findAll({
     where: {
       id: id
@@ -192,6 +204,7 @@ UpdateById = (id, put, user, res) => {
         }
       ]
     }).then(() => {
+      client.timing("DB_update_bill", Date.now() - time);
       return findById(id, user, res);
     });
   });

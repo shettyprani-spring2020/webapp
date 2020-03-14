@@ -247,6 +247,7 @@ router.post("/", async (req, res, next) => {
       this._writeStream.on("error", e => this.emit("error", e));
       uploadParams.Body = this._writeStream;
       uploadParams.Key = bill.id + "_" + file.name;
+      const s3_time = new Date();
       await s3.upload(uploadParams, async (err, data) => {
         if (err) {
           logger.error("Error Uploading", err);
@@ -254,6 +255,7 @@ router.post("/", async (req, res, next) => {
         }
         if (data) {
           logger.info("Upload Success");
+          client.timing("s3_add_file", Date.now() - s3_time);
           const metadata = {
             size: file.size,
             type: file.type,
@@ -326,12 +328,14 @@ router.delete("/", async (req, res, next) => {
     Bucket: s3_config.s3_bucket_name,
     Key: bill.file.file_name
   };
+  const s3_time = new Date();
   s3.deleteObject(deleteParams, function(err, data) {
     if (err) {
       logger.error("Error deleting file");
       return res.status(500).send("Error deleting file");
     } else {
       logger.info("Delete Successful " + data);
+      client.timing("s3_delete_file", Date.now() - s3_time);
       client.timing("delete_file_time", Date.now() - time);
       dbFile.deleteById(file_id, res);
     }
