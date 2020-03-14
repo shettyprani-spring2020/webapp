@@ -9,6 +9,10 @@ let formidable = require("formidable");
 let Transform = require("stream").Transform;
 let AWS = require("aws-sdk");
 let fs = require("fs");
+let logger = require("../logger/log");
+
+let StatsD = require("hot-shots"),
+  client = new StatsD();
 
 // authenticated user variable
 let user;
@@ -18,13 +22,14 @@ let dirname = ".";
 router.all("*", async (req, res, next) => {
   let info = auth(req);
   if (info == undefined) {
-    return res.status(401).send("Unauthorization");
+    logger.info("Unauthorized access");
+    return res.status(401).send("Unauthorized");
   } else {
     user = await dbUser.login(info.name);
     user = user[0];
     let pass = info.pass;
     if (user == undefined) {
-      return res.status(401).send("Unauthorization");
+      return res.status(401).send("Unauthorized");
     }
     if (user.length == 0 || !hash.loginCompare(pass, user.password)) {
       return res.status(401).send("Wrong username or password!");
@@ -35,6 +40,8 @@ router.all("*", async (req, res, next) => {
 
 // Create new bills only will all fields are provided
 router.post("/", (req, res, next) => {
+  let time = new Date();
+  client.increment("new_bill", 1);
   const Bill = req.body;
   if (req.query.id != undefined) {
     next();
@@ -74,6 +81,7 @@ router.post("/", (req, res, next) => {
     return res.status(400).send("Bad Request");
   }
   Bill.categories = Bill.categories.split(",");
+  client.timing("new_bill_time", Date.now() - time);
   dbBill.addBill(Bill, user, res).then(data => {
     return res.status(201).send(data);
   });
@@ -82,6 +90,8 @@ router.post("/", (req, res, next) => {
 // Get ALL details or
 // Get only detail of id provided
 router.get(/\/(:id)?/, (req, res, next) => {
+  client.increment("get_bill", 1);
+  let time = new Date();
   const url = req.originalUrl;
   if (url.includes("file")) {
     next();
@@ -96,6 +106,7 @@ router.get(/\/(:id)?/, (req, res, next) => {
     if (id == undefined) {
       return res.status(400).send("Bad Request");
     }
+    client.timing("get_bill_time", Date.now() - time);
     dbBill.findById(id, user, res).then(resp => {
       res.status(200).send(resp);
     });
@@ -104,6 +115,8 @@ router.get(/\/(:id)?/, (req, res, next) => {
 
 // Delete bill based on ID
 router.delete("/", async (req, res, next) => {
+  client.increment("delete_bill", 1);
+  let time = new Date();
   if (req.originalUrl.includes("file")) {
     return next();
   }
@@ -125,10 +138,11 @@ router.delete("/", async (req, res, next) => {
     };
     s3.deleteObject(deleteParams, function(err, data) {
       if (err) {
-        console.log("Error deleting file"); // error
+        logger.error("Error deleting file");
         res.status(500).send("Error deleting file");
       } else {
-        console.log("Delete Successful");
+        logger.info("Delete Successful");
+        client.timing("delete_bill_time", Date.now() - time);
         dbBill.DeleteById(id, user, res);
       }
     });
@@ -137,6 +151,8 @@ router.delete("/", async (req, res, next) => {
 
 // Update bill based on ID
 router.put("/", (req, res, next) => {
+  client.increment("update_bill", 1);
+  let time = new Date();
   const put = req.body;
   const check = [
     "vendor",
@@ -180,12 +196,15 @@ router.put("/", (req, res, next) => {
     return res.status(400).send("Bad Request");
   }
   put.categories = put.categories.split(",");
+  client.timing("update_bill_time", Date.now() - time);
   dbBill.UpdateById(id, put, user, res).then(bill => {
     res.status(200).send(bill);
   });
 });
 
 router.post("/", async (req, res, next) => {
+  client.increment("new_file", 1);
+  let time = new Date();
   // ---------------------
   let s3_config = require("../../config/s3_bucket.json");
   s3 = new AWS.S3();
@@ -203,9 +222,7 @@ router.post("/", async (req, res, next) => {
   form.parse(req);
   form.uploadDir = "file_upload";
   form.onPart = function(part) {
-    console.log(part);
     if (!part.filename || !part.filename.match(/\.(jpg|jpeg|png|pdf)$/i)) {
-      console.log(part.filename + " is not allowed");
       return res.status(400).send("Format not allowed");
     } else {
       this.handlePart(part);
@@ -230,13 +247,15 @@ router.post("/", async (req, res, next) => {
       this._writeStream.on("error", e => this.emit("error", e));
       uploadParams.Body = this._writeStream;
       uploadParams.Key = bill.id + "_" + file.name;
+      const s3_time = new Date();
       await s3.upload(uploadParams, async (err, data) => {
         if (err) {
-          console.log("Error", err);
+          logger.error("Error Uploading", err);
           res.status(500).send("ERROR uploading");
         }
         if (data) {
-          console.log("Upload Success", data.Location);
+          logger.info("Upload Success");
+          client.timing("s3_add_file", Date.now() - s3_time);
           const metadata = {
             size: file.size,
             type: file.type,
@@ -249,6 +268,7 @@ router.post("/", async (req, res, next) => {
             metadata,
             bill
           );
+          client.timing("new_file_time", Date.now() - time);
           res.send(file_created);
         }
       });
@@ -262,11 +282,13 @@ router.post("/", async (req, res, next) => {
     };
   });
   form.on("file", async (name, file) => {
-    console.log("UPLOADED " + file.name);
+    logger.info("UPLOADED");
   });
 });
 
 router.get("/", async (req, res, next) => {
+  client.increment("get_file", 1);
+  let time = new Date();
   let bill_id = req.query.billId;
   const file_id = req.query.fileId;
   if (bill_id == undefined || file_id == undefined) {
@@ -280,11 +302,13 @@ router.get("/", async (req, res, next) => {
   if (bill.file.file_id != file_id) {
     return res.status(400).send("Bad Request\nWrong File Id");
   }
-
+  client.timing("get_file_time", Date.now() - time);
   return res.status(200).send(bill.file);
 });
 
 router.delete("/", async (req, res, next) => {
+  client.increment("delete", 1);
+  let time = new Date();
   let bill_id = req.query.billId;
   const file_id = req.query.fileId;
   if (bill_id == undefined || file_id == undefined) {
@@ -304,12 +328,15 @@ router.delete("/", async (req, res, next) => {
     Bucket: s3_config.s3_bucket_name,
     Key: bill.file.file_name
   };
+  const s3_time = new Date();
   s3.deleteObject(deleteParams, function(err, data) {
     if (err) {
-      console.log("Error deleting file");
-      res.status(500).send("Error deleting file");
+      logger.error("Error deleting file");
+      return res.status(500).send("Error deleting file");
     } else {
-      console.log("Delete Successful " + data);
+      logger.info("Delete Successful " + data);
+      client.timing("s3_delete_file", Date.now() - s3_time);
+      client.timing("delete_file_time", Date.now() - time);
       dbFile.deleteById(file_id, res);
     }
   });

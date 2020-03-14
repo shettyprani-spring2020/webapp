@@ -99,11 +99,7 @@ workflows:
   version: 2
   pr_check_test:
     jobs:
-      - pr_check:
-          filters:
-            branches:
-              only:
-                - master
+      - pr_check
   build_and_deploy:
     jobs:
       - build:
