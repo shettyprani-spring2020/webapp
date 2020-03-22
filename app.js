@@ -23,8 +23,6 @@ app.use("/", indexRouter);
 app.use("/v1/user", usersRouter);
 app.use(["/v1/bill", "/v1/bills"], billRotuer);
 
-app.use(["/v2/bill", "/v2/bills"], billRotuer);
-
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));
