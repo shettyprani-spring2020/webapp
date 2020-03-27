@@ -38,7 +38,7 @@ router.all("*", async (req, res, next) => {
   }
 });
 
-// Create new bills only will all fields are provided
+// Create new bills only when all fields are provided
 router.post("/", (req, res, next) => {
   let time = new Date();
   client.increment("new_bill", 1);
@@ -93,7 +93,7 @@ router.get(/\/(:id)?/, (req, res, next) => {
   client.increment("get_bill", 1);
   let time = new Date();
   const url = req.originalUrl;
-  if (url.includes("file")) {
+  if (url.includes("file") || url.includes("due")) {
     next();
     return;
   }
@@ -289,6 +289,10 @@ router.post("/", async (req, res, next) => {
 router.get("/", async (req, res, next) => {
   client.increment("get_file", 1);
   let time = new Date();
+  if (url.includes("due")) {
+    next();
+    return;
+  }
   let bill_id = req.query.billId;
   const file_id = req.query.fileId;
   if (bill_id == undefined || file_id == undefined) {
@@ -339,6 +343,55 @@ router.delete("/", async (req, res, next) => {
       client.timing("delete_file_time", Date.now() - time);
       dbFile.deleteById(file_id, res);
     }
+  });
+});
+
+router.get("/due/:days", (req, res) => {
+  const days_left = req.params.days;
+  logger.info("Due date of bills Lambda function");
+  dbBill.findAll(user, res).then(bills => {
+    const due = [];
+    date_diff = date => {
+      const diff_days = Math.ceil(
+        (date.getTime() - new Date()) / (1000 * 3600 * 24)
+      );
+      if (diff_days <= days_left) {
+        return true;
+      }
+    };
+    for (var bill of bills) {
+      if (date_diff(new Date(bill.due_date))) {
+        due.push(bill.dataValues);
+      }
+    }
+    // Send to user
+    res.status(200).send(due);
+    // background task of publishing to sns
+    let sns_config = require("../../config/sns_config.json");
+    let msg = {
+      bills: due,
+      email: user.email_address
+    };
+    console.log(msg);
+    let params = {
+      Message: msg,
+      TopicArn: sns_config.topic_arn
+    };
+
+    var publishPromise = new AWS.SNS({ apiVersion: "2010-03-31" })
+      .publish(params)
+      .promise();
+
+    publishPromise
+      .then(function(data) {
+        console.log(
+          `Message ${params.Message} send sent to the topic ${params.TopicArn}`
+        );
+        logger.info("Message published to SNS");
+      })
+      .catch(function(err) {
+        logger.error("Error publishing the data");
+      });
   });
 });
 
