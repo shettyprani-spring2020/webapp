@@ -369,8 +369,12 @@ router.get("/due/:days", (req, res) => {
           due.push(bill.dataValues);
         }
       }
+      ue.len;
     }
     // Send to user
+    if (due.length == 0) {
+      return res.status(200).send("No bills due!");
+    }
     res.status(200).send(due);
     // background task of publishing to sns
     let sns_config = require("../../config/sns_config.json");
