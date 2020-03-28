@@ -348,6 +348,10 @@ router.delete("/", async (req, res, next) => {
 
 router.get("/due/:days", (req, res) => {
   const days_left = req.params.days;
+
+  if (!Number.isInteger(days_left)) {
+    return res.status(400).send("Bad Request");
+  }
   logger.info("Due date of bills Lambda function");
   dbBill.findAll(user, res).then(bills => {
     const due = [];
@@ -365,8 +369,12 @@ router.get("/due/:days", (req, res) => {
           due.push(bill.dataValues);
         }
       }
+      ue.len;
     }
     // Send to user
+    if (due.length == 0) {
+      return res.status(200).send("No bills due!");
+    }
     res.status(200).send(due);
     // background task of publishing to sns
     let sns_config = require("../../config/sns_config.json");
