@@ -347,8 +347,8 @@ router.delete("/", async (req, res, next) => {
 });
 
 router.get("/due/:days", (req, res) => {
-  const days_left = req.params.days;
-
+  let days_left = req.params.days;
+  days_left = parseFloat(days_left);
   if (!Number.isInteger(days_left)) {
     return res.status(400).send("Bad Request");
   }
@@ -369,7 +369,6 @@ router.get("/due/:days", (req, res) => {
           due.push(bill.dataValues);
         }
       }
-      ue.len;
     }
     // Send to user
     if (due.length == 0) {
