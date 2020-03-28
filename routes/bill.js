@@ -348,6 +348,10 @@ router.delete("/", async (req, res, next) => {
 
 router.get("/due/:days", (req, res) => {
   const days_left = req.params.days;
+
+  if (!Number.isInteger(days_left)) {
+    return res.status(400).send("Bad Request");
+  }
   logger.info("Due date of bills Lambda function");
   dbBill.findAll(user, res).then(bills => {
     const due = [];
