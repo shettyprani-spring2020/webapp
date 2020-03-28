@@ -361,7 +361,9 @@ router.get("/due/:days", (req, res) => {
     };
     for (var bill of bills) {
       if (date_diff(new Date(bill.due_date))) {
-        due.push(bill.dataValues);
+        if (bill.paymentStatus == "due") {
+          due.push(bill.dataValues);
+        }
       }
     }
     // Send to user
@@ -372,9 +374,9 @@ router.get("/due/:days", (req, res) => {
       bills: due,
       email: user.email_address
     };
-    console.log(msg);
+    AWS.config.update({ region: "us-east-1" });
     let params = {
-      Message: msg,
+      Message: JSON.stringify(msg),
       TopicArn: sns_config.topic_arn
     };
 
@@ -390,7 +392,7 @@ router.get("/due/:days", (req, res) => {
         logger.info("Message published to SNS");
       })
       .catch(function(err) {
-        logger.error("Error publishing the data");
+        logger.error("Error publishing the data " + err);
       });
   });
 });
