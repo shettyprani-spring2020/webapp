@@ -376,32 +376,71 @@ router.get("/due/:days", (req, res) => {
     }
     res.status(200).send(due);
     // background task of publishing to sns
-    let sns_config = require("../../config/sns_config.json");
+    let sns_sqs_config = require("../../config/sns_sqs_config.json");
     let msg = {
       bills: due,
       email: user.email_address
     };
     AWS.config.update({ region: "us-east-1" });
-    let params = {
-      Message: JSON.stringify(msg),
-      TopicArn: sns_config.topic_arn
+    var sqs = new AWS.SQS({ apiVersion: "2012-11-05" });
+
+    var send_params = {
+      MessageBody: JSON.stringify(msg),
+      QueueUrl: sns_sqs_config.sqs_url
     };
 
-    var publishPromise = new AWS.SNS({ apiVersion: "2010-03-31" })
-      .publish(params)
-      .promise();
+    sqs.sendMessage(send_params, function(err, data) {
+      if (err) {
+        logger.error("Error", err);
+      } else {
+        logger.info("Success", data.MessageId);
+      }
+    });
 
-    publishPromise
-      .then(function(data) {
-        console.log(
-          `Message ${params.Message} send sent to the topic ${params.TopicArn}`
-        );
-        logger.info("Message published to SNS");
-      })
-      .catch(function(err) {
-        logger.error("Error publishing the data " + err);
-      });
+    let rec_paraams = {
+      MaxNumberOfMessages: 1,
+      QueueUrl: sns_sqs_config.sqs_url
+    };
+
+    sqs.receiveMessage(rec_paraams, sqs_callback);
   });
 });
+
+sqs_callback = (err, data) => {
+  logger.info(data.Message);
+  let sns_sqs_config = require("../../config/sns_sqs_config.json");
+  let params = {
+    Message: data.Messages[0],
+    TopicArn: sns_sqs_config.topic_arn
+  };
+
+  var publishPromise = new AWS.SNS({ apiVersion: "2010-03-31" })
+    .publish(params)
+    .promise();
+
+  publishPromise
+    .then(function(data) {
+      logger.info(
+        `Message ${params.Message} send sent to the topic ${params.TopicArn}`
+      );
+    })
+    .catch(function(err) {
+      logger.error("Error publishing the data " + err);
+    });
+
+  var deleteParams = {
+    QueueUrl: queueURL,
+    ReceiptHandle: data.Messages[0].ReceiptHandle
+  };
+
+  var sqs = new AWS.SQS({ apiVersion: "2012-11-05" });
+  sqs.deleteMessage(deleteParams, function(err, data) {
+    if (err) {
+      logger.error("Delete Error", err);
+    } else {
+      logger.info("Message Deleted", data);
+    }
+  });
+};
 
 module.exports = router;
