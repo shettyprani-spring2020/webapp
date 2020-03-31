@@ -8,6 +8,7 @@ let dbFile = require("../database/FileDb");
 let formidable = require("formidable");
 let Transform = require("stream").Transform;
 let AWS = require("aws-sdk");
+AWS.config.update({ region: "us-east-1" });
 let fs = require("fs");
 let logger = require("../logger/log");
 
@@ -381,7 +382,6 @@ router.get("/due/:days", (req, res) => {
       bills: due,
       email: user.email_address
     };
-    AWS.config.update({ region: "us-east-1" });
     var sqs = new AWS.SQS({ apiVersion: "2012-11-05" });
 
     var send_params = {
@@ -407,10 +407,13 @@ router.get("/due/:days", (req, res) => {
 });
 
 sqs_callback = (err, data) => {
-  logger.info(data.Message);
+  if (err) {
+    logger.error(err);
+    return;
+  }
   let sns_sqs_config = require("../../config/sns_sqs_config.json");
   let params = {
-    Message: data.Messages[0],
+    Message: data.Messages[0].Body,
     TopicArn: sns_sqs_config.topic_arn
   };
 
@@ -420,16 +423,14 @@ sqs_callback = (err, data) => {
 
   publishPromise
     .then(function(data) {
-      logger.info(
-        `Message ${params.Message} send sent to the topic ${params.TopicArn}`
-      );
+      logger.info(`Message sent to the topic ${params.TopicArn}`);
     })
     .catch(function(err) {
       logger.error("Error publishing the data " + err);
     });
 
   var deleteParams = {
-    QueueUrl: queueURL,
+    QueueUrl: sns_sqs_config.sqs_url,
     ReceiptHandle: data.Messages[0].ReceiptHandle
   };
 
