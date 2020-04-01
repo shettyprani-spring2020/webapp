@@ -354,6 +354,7 @@ router.get("/due/:days", (req, res) => {
     return res.status(400).send("Bad Request");
   }
   logger.info("Due date of bills Lambda function");
+  const url = req.get("host");
   dbBill.findAll(user, res).then(bills => {
     const due = [];
     date_diff = date => {
@@ -367,7 +368,8 @@ router.get("/due/:days", (req, res) => {
     for (var bill of bills) {
       if (date_diff(new Date(bill.due_date))) {
         if (bill.paymentStatus == "due") {
-          due.push(bill.dataValues);
+          const link = url + "/v1/bill/?id=" + bill.id;
+          due.push(link);
         }
       }
     }
