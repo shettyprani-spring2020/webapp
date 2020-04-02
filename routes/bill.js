@@ -377,7 +377,7 @@ router.get("/due/:days", (req, res) => {
     if (due.length == 0) {
       return res.status(200).send("No bills due!");
     }
-    res.status(200).send(due);
+    res.status(200).send();
     // background task of publishing to sns
     let sns_sqs_config = require("../../config/sns_sqs_config.json");
     let msg = {
